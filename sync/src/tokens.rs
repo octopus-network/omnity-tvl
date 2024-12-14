@@ -8,7 +8,7 @@ use sea_orm::DbConn;
 use std::error::Error;
 
 pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
-    with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
+	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on CKETH canister ledgers... ");
 
 		let cketh_reqst = Account {
@@ -90,7 +90,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
-    with_canister("CKUSDT_CANISTER_ID", |agent, canister_id| async move {
+	with_canister("CKUSDT_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on CKUSDT canister ledgers... ");
 
 		let ckusdt_reqst = Account {
@@ -129,7 +129,7 @@ pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
-    with_canister("NEURON_CANISTER_ID", |agent, canister_id| async move {
+	with_canister("NEURON_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on NEURON canister ledgers... ");
 
 		let nicp_reqst = Account {
@@ -168,7 +168,7 @@ pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
-    with_canister("DRAGGIN_CANISTER_ID", |agent, canister_id| async move {
+	with_canister("DRAGGIN_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on NEURON canister ledgers... ");
 
 		let nicp_reqst = Account {
@@ -207,7 +207,7 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
-    with_canister("ICP_CANISTER_ID", |agent, canister_id| async move {
+	with_canister("ICP_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on ICP canister ledgers... ");
 
 		let icp_reqst = Account {
@@ -232,8 +232,13 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let bitfinity = sync_with_bitfinity("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6").await?;
-        let ethereum = sync_with_ethereum("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
-		let e_amount = osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap() + ethereum.parse::<u128>().unwrap();
+		let ethereum = sync_with_ethereum(
+			"0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6",
+			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
+		)
+		.await?;
+		let e_amount =
+			osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap() + ethereum.parse::<u128>().unwrap();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -250,7 +255,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	.await
 }
 
-pub async fn sync_rich(_db: &DbConn) -> Result<(), Box<dyn Error>> {
+pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("EICP_HOPE_YOU_GET_RICH", |agent, canister_id| async move {
 		info!("syncing tokens on HOPE_YOU_GET_RICH canister ledgers... ");
 
@@ -260,8 +265,42 @@ pub async fn sync_rich(_db: &DbConn) -> Result<(), Box<dyn Error>> {
 			.with_arg(arg)
 			.call()
 			.await?;
-		let _amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-		// println!("{:?}", amount);
+		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
+		let bitfinity = sync_with_bitfinity("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
+		let ailayer = sync_with_ailayer("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
+		let bitlayer = sync_with_bitlayer("0xb32b737817ba8ff81c696ca8fbd4832cca5751a6").await?;
+		let bsquared = sync_with_bsquared("0x20dD93ad6675E81a635C7be034dC1C9Ce0AE2DE4").await?;
+		let bevm = sync_with_bevm("0xB76fD1B6CDA18a8cFA255E23059c0bB1624bB5F9").await?;
+		let bob = sync_with_bob("0x8f9568BB47b7772f334CcceF4652C9ac7678f21a").await?;
+		let ethereum = sync_with_ethereum(
+			"0xD14fAd0Fe8175aFD3f4c22B25736E11CF42341A5",
+			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
+		)
+		.await?;
+
+		let e_amount = eicp.parse::<u128>().unwrap()
+			+ bitfinity.parse::<u128>().unwrap()
+			+ ailayer.parse::<u128>().unwrap()
+			+ bitlayer.parse::<u128>().unwrap()
+			+ bsquared.parse::<u128>().unwrap()
+			+ bevm.parse::<u128>().unwrap()
+			+ bob.parse::<u128>().unwrap()
+			+ ethereum.parse::<u128>().unwrap();
+
+		let mut hub_amount = 0;
+		for tamount in Query::get_all_amount_by_token(db, "Bitcoin-runes-HOPE•YOU•GET•RICH".to_string()).await? {
+			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		}
+
+		let token_on_ledger = token_on_ledger::Model::new(
+			"RUNES".to_string(),
+			"HOPE•YOU•GET•RICH".to_string(),
+			2_i16,
+			e_amount.to_string(),
+			"0".to_string(),
+			hub_amount.to_string(),
+		);
+		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 		Ok(())
 	})
 	.await

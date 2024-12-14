@@ -36,25 +36,13 @@ impl MigrationTrait for Migration {
 					.to_owned(),
 			)
 			.await?;
-			manager
+		manager
 			.create_table(
 				Table::create()
 					.table(TokenLedgerIdOnChain::Table)
-					.col(
-						ColumnDef::new(TokenLedgerIdOnChain::ChainId)
-							.string()
-							.not_null(),
-					)
-					.col(
-						ColumnDef::new(TokenLedgerIdOnChain::TokenId)
-							.string()
-							.not_null(),
-					)					
-					.col(
-						ColumnDef::new(TokenLedgerIdOnChain::ContractId)
-							.string()
-							.not_null(),
-					)
+					.col(ColumnDef::new(TokenLedgerIdOnChain::ChainId).string().not_null())
+					.col(ColumnDef::new(TokenLedgerIdOnChain::TokenId).string().not_null())
+					.col(ColumnDef::new(TokenLedgerIdOnChain::ContractId).string().not_null())
 					.primary_key(
 						Index::create()
 							.name("pk_chain_token_contract_tvl")
