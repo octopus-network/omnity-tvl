@@ -15,3 +15,6 @@ pub use dao::*;
 
 pub mod chains;
 pub use chains::*;
+
+pub mod tokens;
+pub use tokens::*;

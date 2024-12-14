@@ -1,12 +1,9 @@
-use crate::entities::token_on_ledger;
 use crate::{
-	chains::*,
+	tokens::*,
 	types::{ChainId, OmnityTokenOnChain, TokenId},
-	with_canister, Delete, Error as OmnityError, Mutation, Query,
+	with_canister, Delete, Error as OmnityError, Mutation,
 };
 use candid::{Decode, Encode};
-use candid::{Nat, Principal};
-use icrc_ledger_types::icrc1::account::Account;
 use log::error;
 use log::info;
 use sea_orm::DbConn;
@@ -91,58 +88,11 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// 首先判断是哪种币，如果是icrc的，amount的就是ICP那边，
 	// 然后以token_id为单位再找出token_ledger_id_on_chain同token_id有几条，
 	// 每条用MATCH方式找出在各链的单位数。再相加一起
-	with_canister("CKBTC_CANISTER_ID", |agent, canister_id| async move {
-		info!("syncing tokens on CKBTC canister ledgers... ");
-
-		let ckbtc_reqst = Account {
-			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
-			subaccount: None,
-		};
-		let arg = Encode!(&ckbtc_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let ckbtc_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckBTC".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
-
-		let osmosis = sync_with_osmosis(
-			"factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC",
-		)
-		.await?;
-		let bitfinity = sync_with_bitfinity("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
-		let e_amount = osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap();
-
-		let token_on_ledger = token_on_ledger::Model::new(
-			"sICP".to_string(),
-			"CKBTC".to_string(),
-			8_i16,
-			e_amount.to_string(),
-			ckbtc_amount,
-			hub_amount.to_string(),
-		);
-		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		Ok(())
-	})
-	.await?;
-	with_canister("EICP_HOPE_YOU_GET_RICH", |agent, canister_id| async move {
-		info!("syncing tokens on HOPE_YOU_GET_RICH canister ledgers... ");
-
-		let arg = Encode!(&Vec::<u8>::new())?;
-		let ret = agent
-			.query(&canister_id, "icrc1_total_supply")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let _amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-		// println!("{:?}", amount);
-		Ok(())
-	})
-	.await
+	sync_ckbtc(&db).await?;
+	sync_cketh(&db).await?;
+	sync_ckusdt(&db).await?;
+	sync_neuron_icp(&db).await?;
+	sync_dragginz(&db).await?;
+	sync_icp(&db).await?;
+	sync_rich(&db).await
 }

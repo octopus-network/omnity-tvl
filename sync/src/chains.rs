@@ -230,9 +230,13 @@ pub async fn sync_with_bob(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	}
 }
 
-//sync_with_ethereum("0xD14fAd0Fe8175aFD3f4c22B25736E11CF42341A5&apikey=275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
+//sync_with_ethereum("0xD14fAd0Fe8175aFD3f4c22B25736E11CF42341A5&
+// apikey=275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
 pub async fn sync_with_ethereum(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
-	let url = "https://api.etherscan.io/v2/api?chainid=1&module=stats&action=tokensupply&contractaddress=".to_string() + ledger_id + "&apikey=" + api_token;
+	let url = "https://api.etherscan.io/v2/api?chainid=1&module=stats&action=tokensupply&contractaddress=".to_string()
+		+ ledger_id
+		+ "&apikey="
+		+ api_token;
 
 	let client = reqwest::Client::new();
 	let response = client.get(url).send().await?;
