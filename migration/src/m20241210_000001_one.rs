@@ -35,6 +35,35 @@ impl MigrationTrait for Migration {
 					.col(ColumnDef::new(TokenOnLedger::HubAmount).string().not_null())
 					.to_owned(),
 			)
+			.await?;
+			manager
+			.create_table(
+				Table::create()
+					.table(TokenLedgerIdOnChain::Table)
+					.col(
+						ColumnDef::new(TokenLedgerIdOnChain::ChainId)
+							.string()
+							.not_null(),
+					)
+					.col(
+						ColumnDef::new(TokenLedgerIdOnChain::TokenId)
+							.string()
+							.not_null(),
+					)					
+					.col(
+						ColumnDef::new(TokenLedgerIdOnChain::ContractId)
+							.string()
+							.not_null(),
+					)
+					.primary_key(
+						Index::create()
+							.name("pk_chain_token_contract_tvl")
+							.col(TokenLedgerIdOnChain::ChainId)
+							.col(TokenLedgerIdOnChain::TokenId)
+							.primary(),
+					)
+					.to_owned(),
+			)
 			.await
 	}
 
@@ -44,6 +73,9 @@ impl MigrationTrait for Migration {
 			.await?;
 		manager
 			.drop_table(Table::drop().table(TokenOnLedger::Table).to_owned())
+			.await?;
+		manager
+			.drop_table(Table::drop().table(TokenLedgerIdOnChain::Table).to_owned())
 			.await
 	}
 }
@@ -54,6 +86,14 @@ pub enum TokenOnChain {
 	ChainId,
 	TokenId,
 	Amount,
+}
+
+#[derive(DeriveIden)]
+pub enum TokenLedgerIdOnChain {
+	Table,
+	ChainId,
+	TokenId,
+	ContractId,
 }
 
 #[derive(DeriveIden)]

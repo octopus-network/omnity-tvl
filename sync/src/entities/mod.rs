@@ -2,5 +2,6 @@
 
 pub mod prelude;
 
+pub mod token_ledger_id_on_chain;
 pub mod token_on_chain;
 pub mod token_on_ledger;
