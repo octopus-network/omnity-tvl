@@ -40,9 +40,10 @@ pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, cketh_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("ckETH difference is greater than 1%");
+		if e_amount != 0 && cketh_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, cketh_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("ckETH difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -75,8 +76,11 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC",
 		)
 		.await?;
-		let bitfinity = sync_with_bitfinity("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
-		let e_amount = osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap();
+		let bitfinity = sync_with_bitfinity("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35").await?;
+		let ton = sync_with_ton("EQD3IJCxBHFRNCFFLmtnoIyMEYt_Zio3WT0YQQujA2tSuCTZ").await?;
+
+		let e_amount =
+			osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap() + ton.parse::<u128>().unwrap() + 480;
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -87,9 +91,10 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, ckbtc_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("ckbtc difference is greater than 1%");
+		if e_amount != 0 && ckbtc_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, ckbtc_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("ckbtc difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -130,9 +135,10 @@ pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, ckusdt_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("ckusdt difference is greater than 1%");
+		if e_amount != 0 && ckusdt_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, ckusdt_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("ckusdt difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -173,9 +179,10 @@ pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, nicp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("nicp difference is greater than 1%");
+		if e_amount != 0 && nicp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, nicp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("nicp difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -216,9 +223,10 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, dkp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("dkp difference is greater than 1%");
+		if e_amount != 0 && dkp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, dkp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("dkp difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -257,8 +265,12 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
 		)
 		.await?;
-		let e_amount =
-			osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap() + ethereum.parse::<u128>().unwrap();
+		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
+
+		let e_amount = osmosis.parse::<u128>().unwrap()
+			+ bitfinity.parse::<u128>().unwrap()
+			+ ethereum.parse::<u128>().unwrap()
+			+ ton.parse::<u128>().unwrap();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -269,9 +281,10 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
-		if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-			warn!("dkp difference is greater than 1%");
+		if e_amount != 0 && icp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+				warn!("dkp difference is greater than 1%");
+			}
 		}
 
 		Ok(())
@@ -301,6 +314,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
 		)
 		.await?;
+		let ton = sync_with_ton("EQBGKSkJ307rZY46kqSwwmHskOwSPEO5urm5EZ_EWFyk3bEO").await?;
 
 		let e_amount = eicp.parse::<u128>().unwrap()
 			+ bitfinity.parse::<u128>().unwrap()
@@ -309,7 +323,8 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			+ bsquared.parse::<u128>().unwrap()
 			+ bevm.parse::<u128>().unwrap()
 			+ bob.parse::<u128>().unwrap()
-			+ ethereum.parse::<u128>().unwrap();
+			+ ethereum.parse::<u128>().unwrap()
+			+ ton.parse::<u128>().unwrap();
 
 		let mut hub_amount = 0;
 		for tamount in Query::get_all_amount_by_token(db, "Bitcoin-runes-HOPE•YOU•GET•RICH".to_string()).await? {
