@@ -1,5 +1,5 @@
 use crate::entities::token_on_ledger;
-use crate::{chains::*, with_canister, Mutation, Query};
+use crate::{chains::*, difference_warning, with_canister, Mutation, Query};
 use candid::{Decode, Encode};
 use candid::{Nat, Principal};
 use icrc_ledger_types::icrc1::account::Account;
@@ -36,10 +36,14 @@ pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"CKETH".to_string(),
 			18_i16,
 			e_amount.to_string(),
-			cketh_amount,
+			cketh_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, cketh_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("ckETH difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -79,10 +83,14 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"CKBTC".to_string(),
 			8_i16,
 			e_amount.to_string(),
-			ckbtc_amount,
+			ckbtc_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, ckbtc_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("ckbtc difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -118,10 +126,14 @@ pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"CKUSDT".to_string(),
 			6_i16,
 			e_amount.to_string(),
-			ckusdt_amount,
+			ckusdt_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, ckusdt_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("ckusdt difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -157,10 +169,14 @@ pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"neuron ICP".to_string(),
 			8_i16,
 			e_amount.to_string(),
-			nicp_amount,
+			nicp_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, nicp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("nicp difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -181,7 +197,7 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			.with_arg(arg)
 			.call()
 			.await?;
-		let nicp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+		let dkp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
 		let mut hub_amount = 0;
 		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-DKP".to_string()).await? {
@@ -196,10 +212,14 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"Draggin Karma Points".to_string(),
 			8_i16,
 			e_amount.to_string(),
-			nicp_amount,
+			dkp_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, dkp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("dkp difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -245,10 +265,14 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"ICP".to_string(),
 			8_i16,
 			e_amount.to_string(),
-			icp_amount,
+			icp_amount.clone(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			warn!("dkp difference is greater than 1%");
+		}
 
 		Ok(())
 	})
@@ -303,11 +327,11 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 
 		if e_amount.ge(&hub_amount) {
-			if hub_amount as f64 / e_amount as f64 > 0.001 {
+			if (hub_amount as f64) / (e_amount as f64) < 0.99 {
 				warn!("Rich difference is greater than 1%");
 			}
 		} else {
-			if e_amount as f64 / hub_amount as f64 > 0.001 {
+			if (hub_amount as f64) / (e_amount as f64) < 0.99 {
 				warn!("Rich difference is greater than 1%");
 			}
 		}
