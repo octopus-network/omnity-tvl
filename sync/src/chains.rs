@@ -217,8 +217,11 @@ pub async fn sync_with_bob(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 
 	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
 		if let Some(layer_one) = value.as_object() {
-			if let Some(total_supply) = layer_one.get("total_supply") {
-				return Ok(total_supply.to_string());
+			if let Some(ttl) = layer_one.get("total_supply") {
+				let mut total_supply = ttl.to_string();
+				total_supply.replace_range(0..1, "");
+				total_supply.replace_range((total_supply.len() - 1).., "");
+				return Ok(total_supply);
 			} else {
 				return Err("bob error".into());
 			}

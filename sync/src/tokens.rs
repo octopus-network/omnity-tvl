@@ -3,7 +3,7 @@ use crate::{chains::*, with_canister, Mutation, Query};
 use candid::{Decode, Encode};
 use candid::{Nat, Principal};
 use icrc_ledger_types::icrc1::account::Account;
-use log::info;
+use log::{info, warn};
 use sea_orm::DbConn;
 use std::error::Error;
 
@@ -301,6 +301,16 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
+		if e_amount.ge(&hub_amount) {
+			if hub_amount as f64 / e_amount as f64 > 0.001 {
+				warn!("Rich difference is greater than 1%");
+			}
+		} else {
+			if e_amount as f64 / hub_amount as f64 > 0.001 {
+				warn!("Rich difference is greater than 1%");
+			}
+		}
 		Ok(())
 	})
 	.await

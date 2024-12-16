@@ -85,9 +85,6 @@ pub async fn sync_tokens_on_chains(db: &DbConn) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
-	// 首先判断是哪种币，如果是icrc的，amount的就是ICP那边，
-	// 然后以token_id为单位再找出token_ledger_id_on_chain同token_id有几条，
-	// 每条用MATCH方式找出在各链的单位数。再相加一起
 	sync_ckbtc(&db).await?;
 	sync_cketh(&db).await?;
 	sync_ckusdt(&db).await?;
