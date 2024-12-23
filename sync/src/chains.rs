@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::str::FromStr;
 use web3::contract::{Contract, Options};
-use web3::types::{Address, U256};
+use web3::types::{Address, Bytes, U256};
 
 #[derive(Serialize, Deserialize)]
 struct RpcRequest {
@@ -11,6 +11,66 @@ struct RpcRequest {
 	jsonrpc: String,
 	method: String,
 	params: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct EthcallRpcRequest {
+	id: u32,
+	jsonrpc: String,
+	method: String,
+	params: Vec<serde_json::Value>,
+}
+
+pub async fn sync_with_eth_call(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let method_signature = "totalSupply()";
+	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
+	let data = Bytes::from(method_hash);
+
+	let params = vec![
+		serde_json::json!({
+			"to": ledger_id,
+			"data": data,
+		}),
+		serde_json::json!("latest"),
+	];
+
+	let rpc_request = EthcallRpcRequest {
+		id: 1,
+		jsonrpc: "2.0".to_string(),
+		method: "eth_call".to_string(),
+		params,
+	};
+
+	let client = reqwest::Client::new();
+
+	let response = client
+		.post("https://rootstock-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp")
+		.header("accept", "application/json")
+		.header("content-Type", "application/json")
+		.json(&rpc_request)
+		.send()
+		.await?;
+
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(result) = layer_one.get("result") {
+				let mut amount = result.to_string();
+				amount.replace_range(0..1, "");
+				amount.replace_range((amount.len() - 1).., "");
+				let raw_data = amount.as_str();
+				let value = U256::from_str_radix(raw_data.trim_start_matches("0x"), 16).unwrap();
+				println!("{:?}", value.to_string());
+				return Ok(value.to_string());
+			} else {
+				return Err("eth call error1".into());
+			}
+		} else {
+			return Err("eth call error2".into());
+		}
+	} else {
+		return Err("eth call error3".into());
+	}
 }
 
 //sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
