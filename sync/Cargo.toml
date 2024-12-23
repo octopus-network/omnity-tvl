@@ -30,4 +30,4 @@ serde_json = "1.0"
 thiserror = "1"
 icrc-ledger-types = "0.1.6"
 reqwest = "0.12.9"
-
+web3 = "0.19.0"
