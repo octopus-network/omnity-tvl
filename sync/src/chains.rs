@@ -102,7 +102,6 @@ pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>>
 								let mut amount = layer_six.to_string();
 								amount.replace_range(0..1, "");
 								amount.replace_range((amount.len() - 1).., "");
-								println!("{:?}", amount);
 								return Ok(amount);
 							} else {
 								return Err("solana error7".into());

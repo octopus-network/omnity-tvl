@@ -280,7 +280,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		.await?;
 		let bitfinity = sync_with_bitfinity("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6").await?;
 		let ethereum = sync_with_ethereum(
-			"0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6",
+			"0x8e6e7cd8db9c9b73c6c6221702146840b12d6763",
 			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
 		)
 		.await?;
