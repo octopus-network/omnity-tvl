@@ -21,7 +21,8 @@ struct EthcallRpcRequest {
 	params: Vec<serde_json::Value>,
 }
 
-pub async fn sync_with_eth_call(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+// For ROOTSTOCK/MERLIN/XLAYER
+pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";
 	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
 	let data = Bytes::from(method_hash);
@@ -44,7 +45,7 @@ pub async fn sync_with_eth_call(ledger_id: &str) -> Result<String, Box<dyn Error
 	let client = reqwest::Client::new();
 
 	let response = client
-		.post("https://rootstock-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp")
+		.post(url)
 		.header("accept", "application/json")
 		.header("content-Type", "application/json")
 		.json(&rpc_request)
@@ -60,7 +61,6 @@ pub async fn sync_with_eth_call(ledger_id: &str) -> Result<String, Box<dyn Error
 				amount.replace_range((amount.len() - 1).., "");
 				let raw_data = amount.as_str();
 				let value = U256::from_str_radix(raw_data.trim_start_matches("0x"), 16).unwrap();
-				println!("{:?}", value.to_string());
 				return Ok(value.to_string());
 			} else {
 				return Err("eth call error1".into());
