@@ -8,24 +8,27 @@ use log::error;
 use log::info;
 use sea_orm::DbConn;
 use std::error::Error;
-use std::{future::Future, sync::Arc, time::Duration};
+use std::{future::Future, sync::Arc}; //time::Duration
 
 pub const TOKEN_ON_CHAIN_SYNC_INTERVAL: u64 = 5;
 pub const FETCH_LIMIT: u64 = 50;
 
-pub fn spawn_sync_task<F, Fut>(db_conn: Arc<DbConn>, interval: u64, sync_fn: F) -> tokio::task::JoinHandle<()>
+pub fn spawn_sync_task<F, Fut>(db_conn: Arc<DbConn>, _interval: u64, sync_fn: F) -> tokio::task::JoinHandle<()>
 where
 	F: Fn(Arc<DbConn>) -> Fut + Send + Sync + 'static,
 	Fut: Future<Output = Result<(), Box<dyn Error>>> + Send + 'static,
 {
 	tokio::spawn(async move {
-		let mut interval = tokio::time::interval(Duration::from_secs(interval));
-		loop {
-			sync_fn(db_conn.clone()).await.unwrap_or_else(|e| {
-				error!("sync task error: {}", e);
-			});
-			interval.tick().await;
-		}
+		// let mut interval = tokio::time::interval(Duration::from_secs(interval));
+		// loop {
+		// 	sync_fn(db_conn.clone()).await.unwrap_or_else(|e| {
+		// 		error!("sync task error: {}", e);
+		// 	});
+		// 	interval.tick().await;
+		// }
+		sync_fn(db_conn.clone()).await.unwrap_or_else(|e| {
+			error!("sync task error: {}", e);
+		});
 	})
 }
 
