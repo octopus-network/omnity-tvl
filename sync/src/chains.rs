@@ -1,8 +1,72 @@
 use reqwest;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::str::FromStr;
 use web3::contract::{Contract, Options};
 use web3::types::{Address, U256};
+
+#[derive(Serialize, Deserialize)]
+struct RpcRequest {
+	id: u32,
+	jsonrpc: String,
+	method: String,
+	params: Vec<String>,
+}
+
+//sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
+pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let rpc_request = RpcRequest {
+		id: 1,
+		jsonrpc: "2.0".to_string(),
+		method: "getTokenSupply".to_string(),
+		params: vec![ledger_id.to_string()],
+	};
+
+	let client = reqwest::Client::new();
+
+	let response = client
+		.post("https://solana-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp")
+		.header("accept", "application/json")
+		.header("content-Type", "application/json")
+		.json(&rpc_request)
+		.send()
+		.await?;
+
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(layer_two) = layer_one.get("result") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(layer_four) = layer_three.get("value") {
+						if let Some(layer_five) = layer_four.as_object() {
+							if let Some(layer_six) = layer_five.get("amount") {
+								let mut amount = layer_six.to_string();
+								amount.replace_range(0..1, "");
+								amount.replace_range((amount.len() - 1).., "");
+								println!("{:?}", amount);
+								return Ok(amount);
+							} else {
+								return Err("solana error7".into());
+							}
+						} else {
+							return Err("solana error6".into());
+						}
+					} else {
+						return Err("solana error5".into());
+					}
+				} else {
+					return Err("solana error4".into());
+				}
+			} else {
+				return Err("solana error3".into());
+			}
+		} else {
+			return Err("solana error2".into());
+		}
+	} else {
+		return Err("solana error1".into());
+	}
+}
 
 //sync_with_core("0xfd4de66eca49799bdde66eb33654e2198ab7bba4","9ede2feeb2404baabaa4254590950ec6").
 // await?;
