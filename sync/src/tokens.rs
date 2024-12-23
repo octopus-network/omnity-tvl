@@ -29,7 +29,9 @@ pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		}
 
 		let bitfinity = sync_with_bitfinity("0x242BbcB4f4F1b752Ae30757DC9AE9C24d9A9B640").await?;
-		let e_amount = bitfinity.parse::<u128>().unwrap();
+		info!("bitfinity ckETH : {:?}", bitfinity);
+
+		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -78,9 +80,20 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		.await?;
 		let bitfinity = sync_with_bitfinity("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35").await?;
 		let ton = sync_with_ton("EQD3IJCxBHFRNCFFLmtnoIyMEYt_Zio3WT0YQQujA2tSuCTZ").await?;
+		let core = sync_with_core(
+			"0x51ccde9ca75d95bb55ece1775fcbff91324b18a6",
+			"9ede2feeb2404baabaa4254590950ec6",
+		)
+		.await?;
+		info!("ton ckbtc : {:?}", ton);
+		info!("bitfinity ckbtc : {:?}", bitfinity);
+		info!("core ckbtc : {:?}", core);
+		info!("osmosis ckbtc : {:?}", osmosis);
 
-		let e_amount =
-			osmosis.parse::<u128>().unwrap() + bitfinity.parse::<u128>().unwrap() + ton.parse::<u128>().unwrap() + 480;
+		let e_amount = osmosis.parse::<u128>().unwrap_or_default()
+			+ bitfinity.parse::<u128>().unwrap_or_default()
+			+ ton.parse::<u128>().unwrap_or_default()
+			+ core.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -124,7 +137,9 @@ pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		}
 
 		let bitfinity = sync_with_bitfinity("0xe613EBD1eAe99D824Da8A6C33eC833A62bC04B5a").await?;
-		let e_amount = bitfinity.parse::<u128>().unwrap();
+		info!("bitfinity ckusdt : {:?}", bitfinity);
+
+		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -168,7 +183,9 @@ pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		}
 
 		let bitfinity = sync_with_bitfinity("0x2a78A5f819393105a54F21AdeB4a8b68C5030b02").await?;
-		let e_amount = bitfinity.parse::<u128>().unwrap();
+		info!("bitfinity nICP : {:?}", bitfinity);
+
+		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -212,7 +229,9 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		}
 
 		let bitfinity = sync_with_bitfinity("0x6286e8464E2817818EF8c3353e91824f680354d2").await?;
-		let e_amount = bitfinity.parse::<u128>().unwrap();
+		info!("bitfinity dkp : {:?}", bitfinity);
+
+		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -266,11 +285,15 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
+		info!("ton icp : {:?}", ton);
+		info!("bitfinity icp : {:?}", bitfinity);
+		info!("ethereum icp : {:?}", ethereum);
+		info!("osmosis icp : {:?}", osmosis);
 
-		let e_amount = osmosis.parse::<u128>().unwrap()
-			+ bitfinity.parse::<u128>().unwrap()
-			+ ethereum.parse::<u128>().unwrap()
-			+ ton.parse::<u128>().unwrap();
+		let e_amount = osmosis.parse::<u128>().unwrap_or_default()
+			+ bitfinity.parse::<u128>().unwrap_or_default()
+			+ ethereum.parse::<u128>().unwrap_or_default()
+			+ ton.parse::<u128>().unwrap_or_default();
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -315,16 +338,54 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let ton = sync_with_ton("EQBGKSkJ307rZY46kqSwwmHskOwSPEO5urm5EZ_EWFyk3bEO").await?;
+		let solana = sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
+		let rootstock = sync_with_eth_call(
+			"0xb943b047473218a8e0fc637e96136071ffa3f842",
+			"https://rootstock-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp",
+		)
+		.await?;
+		let xlayer =
+			sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://xlayer.drpc.org").await?;
+		let merlin = sync_with_eth_call(
+			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
+			"https://rpc.merlinchain.io",
+		)
+		.await?;
+		let core = sync_with_core(
+			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
+			"9ede2feeb2404baabaa4254590950ec6",
+		)
+		.await?;
 
-		let e_amount = eicp.parse::<u128>().unwrap()
-			+ bitfinity.parse::<u128>().unwrap()
-			+ ailayer.parse::<u128>().unwrap()
-			+ bitlayer.parse::<u128>().unwrap()
-			+ bsquared.parse::<u128>().unwrap()
-			+ bevm.parse::<u128>().unwrap()
-			+ bob.parse::<u128>().unwrap()
-			+ ethereum.parse::<u128>().unwrap()
-			+ ton.parse::<u128>().unwrap();
+		info!("solana Rich : {:?}", solana);
+		info!("bob Rich : {:?}", bob);
+		info!("rootstock Rich : {:?}", rootstock);
+		info!("ethereum Rich : {:?}", ethereum);
+		info!("bevm Rich : {:?}", bevm);
+		info!("xlayer Rich : {:?}", xlayer);
+		info!("merlin Rich : {:?}", merlin);
+		info!("ailayer Rich : {:?}", ailayer);
+		info!("eicp Rich : {:?}", eicp);
+		info!("bitfinity Rich : {:?}", bitfinity);
+		info!("bsquared Rich : {:?}", bsquared);
+		info!("ton Rich : {:?}", ton);
+		info!("bitlayer Rich : {:?}", bitlayer);
+		info!("core Rich : {:?}", core);
+
+		let e_amount = eicp.parse::<u128>().unwrap_or_default()
+			+ bitfinity.parse::<u128>().unwrap_or_default()
+			+ ailayer.parse::<u128>().unwrap_or_default()
+			+ bitlayer.parse::<u128>().unwrap_or_default()
+			+ bsquared.parse::<u128>().unwrap_or_default()
+			+ bevm.parse::<u128>().unwrap_or_default()
+			+ bob.parse::<u128>().unwrap_or_default()
+			+ ethereum.parse::<u128>().unwrap_or_default()
+			+ ton.parse::<u128>().unwrap_or_default()
+			+ solana.parse::<u128>().unwrap_or_default()
+			+ rootstock.parse::<u128>().unwrap_or_default()
+			+ xlayer.parse::<u128>().unwrap_or_default()
+			+ merlin.parse::<u128>().unwrap_or_default()
+			+ core.parse::<u128>().unwrap_or_default();
 
 		let mut hub_amount = 0;
 		for tamount in Query::get_all_amount_by_token(db, "Bitcoin-runes-HOPE•YOU•GET•RICH".to_string()).await? {

@@ -73,7 +73,6 @@ pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Bo
 	}
 }
 
-//sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
 pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	let rpc_request = RpcRequest {
 		id: 1,
@@ -128,8 +127,6 @@ pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>>
 	}
 }
 
-//sync_with_core("0xfd4de66eca49799bdde66eb33654e2198ab7bba4","9ede2feeb2404baabaa4254590950ec6").
-// await?;
 pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
 	let transport = web3::transports::Http::new("https://api.zan.top/core-mainnet")?;
 	let web3 = web3::Web3::new(transport);
@@ -154,7 +151,6 @@ pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, 
 		let result: U256 = contract
 			.query("totalSupply", (), None, Options::default(), None)
 			.await?;
-		println!("Total supply: {}", result);
 		return Ok(result.to_string());
 	} else {
 		return Err("core error".into());

@@ -86,10 +86,10 @@ pub async fn sync_tokens_on_chains(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	sync_ckbtc(&db).await?;
+	sync_icp(&db).await?;
+	sync_dragginz(&db).await?;
+	sync_neuron_icp(&db).await?;
 	sync_cketh(&db).await?;
 	sync_ckusdt(&db).await?;
-	sync_neuron_icp(&db).await?;
-	sync_dragginz(&db).await?;
-	sync_icp(&db).await?;
 	sync_rich(&db).await
 }
