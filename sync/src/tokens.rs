@@ -70,8 +70,22 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let ckbtc_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
 		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckBTC".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		let mut count = 0;
+
+		while hub_amount == 0 {
+			while count != 5 {
+				if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, "sICP-icrc-ckBTC".to_string()).await {
+					count = ckbtc_amounts.len();
+					if ckbtc_amounts.len() == 5 {
+						for tamount in &ckbtc_amounts {
+							if let Ok(amt) = tamount.amount.parse::<u128>() {
+								hub_amount += amt;
+							}
+						}
+					}
+				}
+			}
+			break;
 		}
 
 		let osmosis = sync_with_osmosis(
