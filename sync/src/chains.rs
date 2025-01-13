@@ -21,6 +21,44 @@ struct EthcallRpcRequest {
 	params: Vec<serde_json::Value>,
 }
 
+// no decimals
+pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let url = "https://api.blockvision.org/v2/sui/coin/detail?coinType=".to_string() + ledger_id;
+	let client = reqwest::Client::new();
+	let response = client
+		.get(url)
+		.header("accept", "application/json")
+		.header("x-api-key", "2rOYaFDPviJAqMF8u0DwdBXlvK7")
+		.send()
+		.await?;
+
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(layer_two) = layer_one.get("result") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(ttl) = layer_three.get("totalSupply") {
+						let mut total_supply = ttl.to_string();
+						total_supply.replace_range(0..1, "");
+						total_supply.replace_range((total_supply.len() - 1).., "");
+						return Ok(total_supply);
+					} else {
+						return Err("sui error5".into());
+					}
+				} else {
+					return Err("sui error4".into());
+				}
+			} else {
+				return Err("sui error3".into());
+			}
+		} else {
+			return Err("sui error2".into());
+		}
+	} else {
+		return Err("sui error1".into());
+	}
+}
+
 // For ROOTSTOCK/MERLIN/XLAYER
 pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";

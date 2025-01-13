@@ -299,15 +299,18 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
+		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP").await?.parse::<f32>().unwrap_or_default() * 100_000_000.0;
 		info!("ton icp : {:?}", ton);
 		info!("bitfinity icp : {:?}", bitfinity);
 		info!("ethereum icp : {:?}", ethereum);
 		info!("osmosis icp : {:?}", osmosis);
+		info!("sui icp : {:?}", sui);
 
 		let e_amount = osmosis.parse::<u128>().unwrap_or_default()
 			+ bitfinity.parse::<u128>().unwrap_or_default()
 			+ ethereum.parse::<u128>().unwrap_or_default()
-			+ ton.parse::<u128>().unwrap_or_default();
+			+ ton.parse::<u128>().unwrap_or_default()
+			+ sui as u128;
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
