@@ -33,6 +33,10 @@ pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
+		info!("ckETH e_chain_amount: {:?}", &e_amount);
+		info!("ckETH s_chain_amountt: {:?}", &cketh_amount);
+		info!("ckETH hub_amount: {:?}", &hub_amount);
+
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
 			"CKETH".to_string(),
@@ -109,6 +113,10 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			+ ton.parse::<u128>().unwrap_or_default()
 			+ core.parse::<u128>().unwrap_or_default();
 
+		info!("ckBTC e_chain_amount: {:?}", &e_amount);
+		info!("ckBTC s_chain_amountt: {:?}", &ckbtc_amount);
+		info!("ckBTC hub_amount: {:?}", &hub_amount);
+
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
 			"CKBTC".to_string(),
@@ -154,6 +162,10 @@ pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("bitfinity ckusdt : {:?}", bitfinity);
 
 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+		info!("ckUSDT e_chain_amount: {:?}", &e_amount);
+		info!("ckUSDT s_chain_amountt: {:?}", &ckusdt_amount);
+		info!("ckUSDT hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -201,6 +213,10 @@ pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
 
+		info!("nICP e_chain_amount: {:?}", &e_amount);
+		info!("nICP s_chain_amountt: {:?}", &nicp_amount);
+		info!("nICP hub_amount: {:?}", &hub_amount);
+
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
 			"neuron ICP".to_string(),
@@ -246,6 +262,10 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("bitfinity dkp : {:?}", bitfinity);
 
 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+		info!("dkp e_chain_amount: {:?}", &e_amount);
+		info!("dkp s_chain_amountt: {:?}", &dkp_amount);
+		info!("dkp hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -299,7 +319,11 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
-		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP").await?.parse::<f32>().unwrap_or_default() * 100_000_000.0;
+		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP")
+			.await?
+			.parse::<f32>()
+			.unwrap_or_default()
+			* 100_000_000.0;
 		info!("ton icp : {:?}", ton);
 		info!("bitfinity icp : {:?}", bitfinity);
 		info!("ethereum icp : {:?}", ethereum);
@@ -311,6 +335,10 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			+ ethereum.parse::<u128>().unwrap_or_default()
 			+ ton.parse::<u128>().unwrap_or_default()
 			+ sui as u128;
+
+		info!("ICP e_chain_amount: {:?}", &e_amount);
+		info!("ICP s_chain_amountt: {:?}", &icp_amount);
+		info!("ICP hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -408,6 +436,10 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		for tamount in Query::get_all_amount_by_token(db, "Bitcoin-runes-HOPE•YOU•GET•RICH".to_string()).await? {
 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
 		}
+
+		info!("RICH e_chain_amount: {:?}", &e_amount);
+		info!("RICH s_chain_amountt: {:?}", 0);
+		info!("RICH hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"RUNES".to_string(),
