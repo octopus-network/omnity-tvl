@@ -98,9 +98,14 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		.await?;
 		let bitfinity = sync_with_bitfinity("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35").await?;
 		let ton = sync_with_ton("EQD3IJCxBHFRNCFFLmtnoIyMEYt_Zio3WT0YQQujA2tSuCTZ").await?;
-		let core = sync_with_core(
+		// let core = sync_with_core(
+		// 	"0x51ccde9ca75d95bb55ece1775fcbff91324b18a6",
+		// 	"9ede2feeb2404baabaa4254590950ec6",
+		// )
+		// .await?;
+		let core = sync_with_eth_call(
 			"0x51ccde9ca75d95bb55ece1775fcbff91324b18a6",
-			"9ede2feeb2404baabaa4254590950ec6",
+			"https://rpc-core.icecreamswap.com",
 		)
 		.await?;
 		info!("ton ckbtc : {:?}", ton);
@@ -319,11 +324,12 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
-		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP")
-			.await?
-			.parse::<f32>()
-			.unwrap_or_default()
-			* 100_000_000.0;
+		// let sui = sync_with_sui("
+		// 0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP") 	.await?
+		// 	.parse::<f32>()
+		// 	.unwrap_or_default()
+		// 	* 100_000_000.0;
+		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP").await?;
 		info!("ton icp : {:?}", ton);
 		info!("bitfinity icp : {:?}", bitfinity);
 		info!("ethereum icp : {:?}", ethereum);
@@ -334,7 +340,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			+ bitfinity.parse::<u128>().unwrap_or_default()
 			+ ethereum.parse::<u128>().unwrap_or_default()
 			+ ton.parse::<u128>().unwrap_or_default()
-			+ sui as u128;
+			+ sui.parse::<u128>().unwrap_or_default();
 
 		info!("ICP e_chain_amount: {:?}", &e_amount);
 		info!("ICP s_chain_amountt: {:?}", &icp_amount);
@@ -396,9 +402,14 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"https://rpc.merlinchain.io",
 		)
 		.await?;
-		let core = sync_with_core(
+		// let core = sync_with_core(
+		// 	"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
+		// 	"9ede2feeb2404baabaa4254590950ec6",
+		// )
+		// .await?;
+		let core = sync_with_eth_call(
 			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
-			"9ede2feeb2404baabaa4254590950ec6",
+			"https://rpc-core.icecreamswap.com",
 		)
 		.await?;
 

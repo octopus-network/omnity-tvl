@@ -21,8 +21,49 @@ struct EthcallRpcRequest {
 	params: Vec<serde_json::Value>,
 }
 
-// no decimals
 pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let rpc_request = RpcRequest {
+		id: 1,
+		jsonrpc: "2.0".to_string(),
+		method: "suix_getTotalSupply".to_string(),
+		params: vec![ledger_id.to_string()],
+	};
+
+	let client = reqwest::Client::new();
+	let response = client
+		.post("https://fullnode.mainnet.sui.io:443")
+		.json(&rpc_request)
+		.send()
+		.await?;
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(layer_two) = layer_one.get("result") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(ttl) = layer_three.get("value") {
+						let mut total_supply = ttl.to_string();
+						total_supply.replace_range(0..1, "");
+						total_supply.replace_range((total_supply.len() - 1).., "");
+						return Ok(total_supply);
+					} else {
+						return Err("sui error5".into());
+					}
+				} else {
+					return Err("sui error4".into());
+				}
+			} else {
+				return Err("sui error3".into());
+			}
+		} else {
+			return Err("sui error2".into());
+		}
+	} else {
+		return Err("sui error1".into());
+	}
+}
+
+// no decimals & deprecated
+pub async fn _sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	let url = "https://api.blockvision.org/v2/sui/coin/detail?coinType=".to_string() + ledger_id;
 	let client = reqwest::Client::new();
 	let response = client
@@ -59,7 +100,7 @@ pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	}
 }
 
-// For ROOTSTOCK/MERLIN/XLAYER
+// For ROOTSTOCK/MERLIN/XLAYER/CORE
 pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";
 	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
@@ -164,6 +205,7 @@ pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>>
 	}
 }
 
+// deprecated
 pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
 	let transport = web3::transports::Http::new("https://api.zan.top/core-mainnet")?;
 	let web3 = web3::Web3::new(transport);

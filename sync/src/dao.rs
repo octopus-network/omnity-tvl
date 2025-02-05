@@ -47,12 +47,13 @@ impl Mutation {
 			.await;
 
 		match insert_result {
-			Ok(ret) => {
-				info!("insert token on chain result : {:?}", ret);
+			Ok(_ret) => {
+				// info!("insert token on chain result : {:?}", ret);
 			}
 			Err(_) => {
-				let model = update_token_on_chain(db, token_on_chain.clone(), token_on_chain.clone().amount).await?;
-				info!("the token on chain already exists, updated it ! {:?}", model);
+				// let model = update_token_on_chain(db, token_on_chain.clone(),
+				// token_on_chain.clone().amount).await?; info!("the token on chain already
+				// exists, updated it ! {:?}", model);
 			}
 		}
 		Ok(token_on_chain::Model { ..token_on_chain })
@@ -76,7 +77,7 @@ impl Mutation {
 				info!("insert token on ledger result : {:?}", ret);
 			}
 			Err(_) => {
-				let model = update_token_on_ledger(
+				let _model = update_token_on_ledger(
 					db,
 					token_on_ledger.clone(),
 					token_on_ledger.clone().e_chain_amount,
@@ -84,7 +85,7 @@ impl Mutation {
 					token_on_ledger.clone().hub_amount,
 				)
 				.await?;
-				info!("the token on ledger already exists, updated it ! {:?}", model);
+				// info!("the token on ledger already exists, updated it ! {:?}", model);
 			}
 		}
 		Ok(token_on_ledger::Model { ..token_on_ledger })
