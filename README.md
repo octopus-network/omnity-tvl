@@ -1,4 +1,4 @@
-# offchain-tvl
+# omnity-tvl
 
 ### Create or drop the schema
 ```bash  
