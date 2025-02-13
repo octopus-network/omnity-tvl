@@ -100,7 +100,7 @@ pub async fn _sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	}
 }
 
-// For ROOTSTOCK/MERLIN/XLAYER/CORE
+// For ROOTSTOCK/MERLIN/XLAYER/CORE/BASE
 pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";
 	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
