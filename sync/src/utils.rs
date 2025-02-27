@@ -1,7 +1,5 @@
 use anyhow::anyhow;
-use ic_agent::{
-	agent::http_transport::ReqwestTransport, export::Principal, identity::Secp256k1Identity, Agent, Identity,
-};
+use ic_agent::{export::Principal, identity::Secp256k1Identity, Agent, Identity};
 use log::info;
 use sea_orm::{ConnectOptions, DatabaseConnection};
 use std::time::Duration;
@@ -45,7 +43,7 @@ pub async fn create_agent(identity: impl Identity + 'static) -> Result<Agent, St
 		.unwrap();
 
 	Agent::builder()
-		.with_transport(ReqwestTransport::create(network).unwrap())
+		.with_url(network)
 		.with_identity(identity)
 		.build()
 		.map_err(|e| format!("{:?}", e))

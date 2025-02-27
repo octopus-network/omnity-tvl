@@ -16,7 +16,7 @@ sea-orm-cli migrate up -u postgres://postgres:omnity_go@localhost/tvl
 ### Build and run
 
 ```bash
-cargo build --locked --release -p tvl
+cargo build --release -p tvl
 
 ./target/release/tvl
 ```
