@@ -6,6 +6,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use log::{info, warn};
 use sea_orm::DbConn;
 use std::error::Error;
+use anyhow::anyhow;
 
 pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
@@ -397,11 +398,13 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		.await?;
 		let ton = sync_with_ton("EQBGKSkJ307rZY46kqSwwmHskOwSPEO5urm5EZ_EWFyk3bEO").await?;
 		let solana = sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
-		let rootstock = sync_with_eth_call(
-			"0xb943b047473218a8e0fc637e96136071ffa3f842",
-			"https://rootstock-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp",
-		)
-		.await?;
+
+		let key = std::env::var("ALCHEMY_KEY")
+			.map_err(|_| anyhow!("LCHEMY_KEY is not found"))
+			.unwrap();
+		let url = "https://rootstock-mainnet.g.alchemy.com/v2/".to_string() + &key;
+		let rootstock = sync_with_eth_call("0xb943b047473218a8e0fc637e96136071ffa3f842", &url).await?;
+
 		let xlayer =
 			sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://xlayer.drpc.org").await?;
 		let merlin = sync_with_eth_call(

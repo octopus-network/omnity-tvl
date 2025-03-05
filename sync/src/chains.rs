@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -161,9 +162,13 @@ pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>>
 	};
 
 	let client = reqwest::Client::new();
+	let key = std::env::var("ALCHEMY_KEY")
+		.map_err(|_| anyhow!("LCHEMY_KEY is not found"))
+		.unwrap();
+	let url = "https://solana-mainnet.g.alchemy.com/v2/".to_string() + &key;
 
 	let response = client
-		.post("https://solana-mainnet.g.alchemy.com/v2/cGLTsIuYp7tGOPwDypL0bvmbpjiQQiSp")
+		.post(url)
 		.header("accept", "application/json")
 		.header("content-Type", "application/json")
 		.json(&rpc_request)
