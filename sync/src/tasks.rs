@@ -1,7 +1,7 @@
 use crate::{
 	tokens::*,
 	types::{ChainId, OmnityTokenOnChain, TokenId},
-	with_canister, Delete, Error as OmnityError, Mutation,
+	with_canister, Error as OmnityError, Mutation,
 };
 use candid::{Decode, Encode};
 use log::error;
@@ -33,10 +33,10 @@ where
 }
 
 pub async fn execute_sync_tasks(db_conn: Arc<DbConn>) {
-	let remove_database = async {
-		let _ = Delete::remove_token_on_chains(&db_conn).await;
-		let _ = Delete::remove_token_on_ledgers(&db_conn).await;
-	};
+	// let remove_database = async {
+	// 	let _ = Delete::remove_token_on_chains(&db_conn).await;
+	// 	let _ = Delete::remove_token_on_ledgers(&db_conn).await;
+	// };
 
 	let sync_tokens_on_chains_from_hub =
 		spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
@@ -45,7 +45,7 @@ pub async fn execute_sync_tasks(db_conn: Arc<DbConn>) {
 	let sync_tokens_on_ledgers = spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
 		sync_tokens_on_ledgers(&db_conn).await
 	});
-	let _ = tokio::join!(remove_database, sync_tokens_on_chains_from_hub, sync_tokens_on_ledgers);
+	let _ = tokio::join!(sync_tokens_on_chains_from_hub, sync_tokens_on_ledgers);
 }
 
 pub async fn sync_tokens_on_chains(db: &DbConn) -> Result<(), Box<dyn Error>> {
@@ -90,9 +90,9 @@ pub async fn sync_tokens_on_chains(db: &DbConn) -> Result<(), Box<dyn Error>> {
 pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	sync_ckbtc(&db).await?;
 	sync_icp(&db).await?;
-	sync_dragginz(&db).await?;
-	sync_neuron_icp(&db).await?;
-	sync_cketh(&db).await?;
-	sync_ckusdt(&db).await?;
+	// sync_dragginz(&db).await?;
+	// sync_neuron_icp(&db).await?;
+	// sync_cketh(&db).await?;
+	// sync_ckusdt(&db).await?;
 	sync_rich(&db).await
 }

@@ -6,11 +6,18 @@ use sea_orm::{sea_query::OnConflict, *};
 
 pub struct Query;
 impl Query {
-	pub async fn get_all_amount_by_token(db: &DbConn, token_id: String) -> Result<Vec<token_on_chain::Model>, DbErr> {
+	pub async fn get_all_amount_by_token(db: &DbConn, token_id: &str) -> Result<Vec<token_on_chain::Model>, DbErr> {
 		TokenOnChain::find()
 			.filter(Condition::all().add(token_on_chain::Column::TokenId.eq(token_id)))
 			.all(db)
 			.await
+	}
+	pub async fn get_token_amount_by_id(
+		db: &DbConn,
+		token_id: String,
+		chain_id: String,
+	) -> Result<Option<token_on_chain::Model>, DbErr> {
+		TokenOnChain::find_by_id((chain_id, token_id)).one(db).await
 	}
 }
 
@@ -51,9 +58,12 @@ impl Mutation {
 				// info!("insert token on chain result : {:?}", ret);
 			}
 			Err(_) => {
-				// let model = update_token_on_chain(db, token_on_chain.clone(),
-				// token_on_chain.clone().amount).await?; info!("the token on chain already
-				// exists, updated it ! {:?}", model);
+				let _model =
+					Self::update_token_on_chain(db, token_on_chain.clone(), token_on_chain.clone().amount).await?;
+				// info!(
+				// 	"the token on chain already exists, updated it ! {:?}",
+				// 	model
+				// );
 			}
 		}
 		Ok(token_on_chain::Model { ..token_on_chain })
@@ -77,7 +87,7 @@ impl Mutation {
 				info!("insert token on ledger result : {:?}", ret);
 			}
 			Err(_) => {
-				let _model = update_token_on_ledger(
+				let _model = Self::update_token_on_ledger(
 					db,
 					token_on_ledger.clone(),
 					token_on_ledger.clone().e_chain_amount,
@@ -90,30 +100,30 @@ impl Mutation {
 		}
 		Ok(token_on_ledger::Model { ..token_on_ledger })
 	}
-}
 
-pub async fn update_token_on_chain(
-	db: &DbConn,
-	token_on_chain: token_on_chain::Model,
-	amount: String,
-) -> Result<token_on_chain::Model, DbErr> {
-	let mut active_model: token_on_chain::ActiveModel = token_on_chain.into();
-	active_model.amount = Set(amount);
-	let token_on_chain = active_model.update(db).await?;
-	Ok(token_on_chain)
-}
+	pub async fn update_token_on_chain(
+		db: &DbConn,
+		token_on_chain: token_on_chain::Model,
+		amount: String,
+	) -> Result<token_on_chain::Model, DbErr> {
+		let mut active_model: token_on_chain::ActiveModel = token_on_chain.into();
+		active_model.amount = Set(amount);
+		let token_on_chain = active_model.update(db).await?;
+		Ok(token_on_chain)
+	}
 
-pub async fn update_token_on_ledger(
-	db: &DbConn,
-	token_on_ledger: token_on_ledger::Model,
-	e_chain_amount: String,
-	s_chain_amount: String,
-	hub_amount: String,
-) -> Result<token_on_ledger::Model, DbErr> {
-	let mut active_model: token_on_ledger::ActiveModel = token_on_ledger.into();
-	active_model.e_chain_amount = Set(e_chain_amount);
-	active_model.s_chain_amount = Set(s_chain_amount);
-	active_model.hub_amount = Set(hub_amount);
-	let token_on_ledger = active_model.update(db).await?;
-	Ok(token_on_ledger)
+	pub async fn update_token_on_ledger(
+		db: &DbConn,
+		token_on_ledger: token_on_ledger::Model,
+		e_chain_amount: String,
+		s_chain_amount: String,
+		hub_amount: String,
+	) -> Result<token_on_ledger::Model, DbErr> {
+		let mut active_model: token_on_ledger::ActiveModel = token_on_ledger.into();
+		active_model.e_chain_amount = Set(e_chain_amount);
+		active_model.s_chain_amount = Set(s_chain_amount);
+		active_model.hub_amount = Set(hub_amount);
+		let token_on_ledger = active_model.update(db).await?;
+		Ok(token_on_ledger)
+	}
 }

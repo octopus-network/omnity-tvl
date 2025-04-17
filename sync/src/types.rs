@@ -107,7 +107,6 @@ impl Reason {
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OmnityTokenOnChain {
-	// the chain of the token be locked
 	pub chain_id: ChainId,
 	pub token_id: TokenId,
 	pub amount: u128,
@@ -160,4 +159,27 @@ impl token_on_ledger::Model {
 			hub_amount,
 		}
 	}
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Chain {
+	pub chain_id: ChainId,
+	pub canister_id: String,
+	pub chain_type: ChainType,
+	pub chain_state: ChainState,
+	pub contract_address: Option<String>,
+	pub counterparties: Option<Vec<ChainId>>,
+	pub fee_token: Option<TokenId>,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ChainType {
+	SettlementChain,
+	ExecutionChain,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ChainState {
+	Active,
+	Deactive,
 }

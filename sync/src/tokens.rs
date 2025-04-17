@@ -1,66 +1,21 @@
 use crate::entities::token_on_ledger;
-use crate::{chains::*, difference_warning, with_canister, Mutation, Query};
-use candid::{Decode, Encode};
-use candid::{Nat, Principal};
+use crate::{
+	chains::*,
+	difference_btw_two_bigger_than_1_percentage, difference_warning,
+	types::{Chain, ChainState, Error as OmnityError},
+	with_canister, Mutation, Query,
+};
+use anyhow::anyhow;
+use candid::{Decode, Encode, Nat, Principal};
 use icrc_ledger_types::icrc1::account::Account;
 use log::{info, warn};
 use sea_orm::DbConn;
 use std::error::Error;
-use anyhow::anyhow;
-
-pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
-	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
-		info!("syncing tokens on CKETH canister ledgers... ");
-
-		let cketh_reqst = Account {
-			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
-			subaccount: None,
-		};
-		let arg = Encode!(&cketh_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let cketh_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckETH".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
-
-		let bitfinity = sync_with_bitfinity("0x242BbcB4f4F1b752Ae30757DC9AE9C24d9A9B640").await?;
-		info!("bitfinity ckETH : {:?}", bitfinity);
-
-		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
-
-		info!("ckETH e_chain_amount: {:?}", &e_amount);
-		info!("ckETH s_chain_amountt: {:?}", &cketh_amount);
-		info!("ckETH hub_amount: {:?}", &hub_amount);
-
-		let token_on_ledger = token_on_ledger::Model::new(
-			"sICP".to_string(),
-			"CKETH".to_string(),
-			18_i16,
-			e_amount.to_string(),
-			cketh_amount.clone(),
-			hub_amount.to_string(),
-		);
-		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		if e_amount != 0 && cketh_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
-			if difference_warning(e_amount, cketh_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-				warn!("ckETH difference is greater than 1%");
-			}
-		}
-
-		Ok(())
-	})
-	.await
-}
 
 pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("CKBTC_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on CKBTC canister ledgers... ");
+		let ckbtc_token_id = "sICP-icrc-ckBTC";
 
 		let ckbtc_reqst = Account {
 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
@@ -79,7 +34,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		while hub_amount == 0 {
 			while count != 5 {
-				if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, "sICP-icrc-ckBTC".to_string()).await {
+				if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
 					count = ckbtc_amounts.len();
 					if ckbtc_amounts.len() == 5 {
 						for tamount in &ckbtc_amounts {
@@ -109,18 +64,24 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"https://rpc-core.icecreamswap.com",
 		)
 		.await?;
-		info!("ton ckbtc : {:?}", ton);
-		info!("bitfinity ckbtc : {:?}", bitfinity);
-		info!("core ckbtc : {:?}", core);
-		info!("osmosis ckbtc : {:?}", osmosis);
+		// info!("ton ckbtc : {:?}", ton);
+		// info!("bitfinity ckbtc : {:?}", bitfinity);
+		// info!("core ckbtc : {:?}", core);
+		// info!("osmosis ckbtc : {:?}", osmosis);
+		// 可能parse出问题
+		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
+		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
+		let ton_supply = ton.parse::<u128>().unwrap_or_default();
+		let core_supply = core.parse::<u128>().unwrap_or_default();
 
-		let e_amount = osmosis.parse::<u128>().unwrap_or_default()
-			+ bitfinity.parse::<u128>().unwrap_or_default()
-			+ ton.parse::<u128>().unwrap_or_default()
-			+ core.parse::<u128>().unwrap_or_default();
+		info!("ton ckbtc : {:?}", ton_supply);
+		info!("bitfinity ckbtc : {:?}", bitfinity_supply);
+		info!("core ckbtc : {:?}", core_supply);
+		info!("osmosis ckbtc : {:?}", osmosis_supply);
 
+		let e_amount = osmosis_supply + bitfinity_supply + ton_supply + core_supply;
 		info!("ckBTC e_chain_amount: {:?}", &e_amount);
-		info!("ckBTC s_chain_amountt: {:?}", &ckbtc_amount);
+		info!("ckBTC s_chain_amount: {:?}", &ckbtc_amount);
 		info!("ckBTC hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
@@ -132,162 +93,67 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
 		if e_amount != 0 && ckbtc_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+			// 可能parse出问题
 			if difference_warning(e_amount, ckbtc_amount.parse::<u128>().unwrap_or(0), hub_amount) {
 				warn!("ckbtc difference is greater than 1%");
+				let _ = check_chain("osmosis-1", ckbtc_token_id, osmosis_supply, db).await?;
+				let _ = check_chain("Bitfinity", ckbtc_token_id, bitfinity_supply, db).await?;
+				let _ = check_chain("Ton", ckbtc_token_id, ton_supply, db).await?;
+				let _ = check_chain("Core", ckbtc_token_id, core_supply, db).await?;
 			}
 		}
-
 		Ok(())
 	})
 	.await
 }
 
-pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
-	with_canister("CKUSDT_CANISTER_ID", |agent, canister_id| async move {
-		info!("syncing tokens on CKUSDT canister ledgers... ");
+async fn check_chain(
+	chain_id: &str,
+	token_id: &str,
+	target_chain_supply: u128,
+	db: &DbConn,
+) -> Result<(), Box<dyn Error>> {
+	with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+		let args = Encode!(&chain_id)?;
+		let ret = agent.query(&canister_id, "get_chain").with_arg(args).call().await?;
 
-		let ckusdt_reqst = Account {
-			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
-			subaccount: None,
-		};
-		let arg = Encode!(&ckusdt_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let ckusdt_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+		if let Ok(chain_meta) = Decode!(&ret, Result<Chain, OmnityError>)? {
+			info!("{:?} chain_state: {:?}", chain_meta.chain_id, chain_meta.chain_state);
 
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckUSDT".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
+			if chain_meta.chain_state == ChainState::Active {
+				let chain_on_hub =
+					Query::get_token_amount_by_id(db, token_id.to_string(), chain_id.to_string()).await?;
+				if let Some(chain_token) = chain_on_hub {
+					let huh_amount = chain_token.amount.parse::<u128>().unwrap_or(0);
+					info!("huh_amount1: {:?}", huh_amount);
+					info!("target_chain_supply1: {:?}", target_chain_supply);
 
-		let bitfinity = sync_with_bitfinity("0xe613EBD1eAe99D824Da8A6C33eC833A62bC04B5a").await?;
-		info!("bitfinity ckusdt : {:?}", bitfinity);
-
-		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
-
-		info!("ckUSDT e_chain_amount: {:?}", &e_amount);
-		info!("ckUSDT s_chain_amountt: {:?}", &ckusdt_amount);
-		info!("ckUSDT hub_amount: {:?}", &hub_amount);
-
-		let token_on_ledger = token_on_ledger::Model::new(
-			"sICP".to_string(),
-			"CKUSDT".to_string(),
-			6_i16,
-			e_amount.to_string(),
-			ckusdt_amount.clone(),
-			hub_amount.to_string(),
-		);
-		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		if e_amount != 0 && ckusdt_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
-			if difference_warning(e_amount, ckusdt_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-				warn!("ckusdt difference is greater than 1%");
+					if difference_btw_two_bigger_than_1_percentage(huh_amount, target_chain_supply) {
+						info!("huh_amount: {:?}", huh_amount);
+						info!("target_chain_supply: {:?}", target_chain_supply);
+						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
+						// 如错误停，可屏蔽这段先
+						info!("trying to pause {:?} chain ... ", chain_id);
+						let arg: Vec<u8> = Encode!(&chain_id)?;
+						match agent
+							.update(&canister_id, "audit_stop_chain")
+							.with_arg(arg)
+							.call_and_wait()
+							.await
+						{
+							Ok(_ret) => {
+								info!("complete to pause a chain ... {:?}", ret);
+							}
+							Err(e) => {
+								info!("err ... {:?}", e);
+							}
+						}
+					}
+				}
 			}
 		}
-
-		Ok(())
-	})
-	.await
-}
-
-pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
-	with_canister("NEURON_CANISTER_ID", |agent, canister_id| async move {
-		info!("syncing tokens on NEURON canister ledgers... ");
-
-		let nicp_reqst = Account {
-			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
-			subaccount: None,
-		};
-		let arg = Encode!(&nicp_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let nicp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-nICP".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
-
-		let bitfinity = sync_with_bitfinity("0x2a78A5f819393105a54F21AdeB4a8b68C5030b02").await?;
-		info!("bitfinity nICP : {:?}", bitfinity);
-
-		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
-
-		info!("nICP e_chain_amount: {:?}", &e_amount);
-		info!("nICP s_chain_amountt: {:?}", &nicp_amount);
-		info!("nICP hub_amount: {:?}", &hub_amount);
-
-		let token_on_ledger = token_on_ledger::Model::new(
-			"sICP".to_string(),
-			"neuron ICP".to_string(),
-			8_i16,
-			e_amount.to_string(),
-			nicp_amount.clone(),
-			hub_amount.to_string(),
-		);
-		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		if e_amount != 0 && nicp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
-			if difference_warning(e_amount, nicp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-				warn!("nicp difference is greater than 1%");
-			}
-		}
-
-		Ok(())
-	})
-	.await
-}
-
-pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
-	with_canister("DRAGGIN_CANISTER_ID", |agent, canister_id| async move {
-		info!("syncing tokens on NEURON canister ledgers... ");
-
-		let nicp_reqst = Account {
-			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
-			subaccount: None,
-		};
-		let arg = Encode!(&nicp_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
-		let dkp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
-
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-DKP".to_string()).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
-
-		let bitfinity = sync_with_bitfinity("0x6286e8464E2817818EF8c3353e91824f680354d2").await?;
-		info!("bitfinity dkp : {:?}", bitfinity);
-
-		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
-
-		info!("dkp e_chain_amount: {:?}", &e_amount);
-		info!("dkp s_chain_amountt: {:?}", &dkp_amount);
-		info!("dkp hub_amount: {:?}", &hub_amount);
-
-		let token_on_ledger = token_on_ledger::Model::new(
-			"sICP".to_string(),
-			"Draggin Karma Points".to_string(),
-			8_i16,
-			e_amount.to_string(),
-			dkp_amount.clone(),
-			hub_amount.to_string(),
-		);
-		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		if e_amount != 0 && dkp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
-			if difference_warning(e_amount, dkp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-				warn!("dkp difference is greater than 1%");
-			}
-		}
-
 		Ok(())
 	})
 	.await
@@ -296,6 +162,7 @@ pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
 pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("ICP_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on ICP canister ledgers... ");
+		let icp_token_id = "sICP-native-ICP";
 
 		let icp_reqst = Account {
 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
@@ -310,7 +177,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let icp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
 		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "sICP-native-ICP".to_string()).await? {
+		for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
 		}
 
@@ -336,22 +203,35 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"https://base-pokt.nodies.app",
 		)
 		.await?;
-		info!("ton icp : {:?}", ton);
-		info!("bitfinity icp : {:?}", bitfinity);
-		info!("ethereum icp : {:?}", ethereum);
-		info!("osmosis icp : {:?}", osmosis);
-		info!("sui icp : {:?}", sui);
-		info!("base icp : {:?}", base);
+		let solana = sync_with_solana("79yjxQmS7NWd3a5ZDrVrVcP9xEPsT4tFCys5SUdG8VxN").await?;
+		// info!("ton icp : {:?}", ton);
+		// info!("bitfinity icp : {:?}", bitfinity);
+		// info!("ethereum icp : {:?}", ethereum);
+		// info!("osmosis icp : {:?}", osmosis);
+		// info!("sui icp : {:?}", sui);
+		// info!("base icp : {:?}", base);
 
-		let e_amount = osmosis.parse::<u128>().unwrap_or_default()
-			+ bitfinity.parse::<u128>().unwrap_or_default()
-			+ ethereum.parse::<u128>().unwrap_or_default()
-			+ ton.parse::<u128>().unwrap_or_default()
-			+ sui.parse::<u128>().unwrap_or_default()
-			+ base.parse::<u128>().unwrap_or_default();
+		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
+		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
+		let ethereum_supply = ethereum.parse::<u128>().unwrap_or_default();
+		let ton_supply = ton.parse::<u128>().unwrap_or_default();
+		let sui_supply = sui.parse::<u128>().unwrap_or_default();
+		let base_supply = base.parse::<u128>().unwrap_or_default();
+		let solana_supply = solana.parse::<u128>().unwrap_or_default();
+
+		let e_amount =
+			osmosis_supply + bitfinity_supply + ethereum_supply + ton_supply + sui_supply + base_supply + solana_supply;
+
+		info!("ton icp : {:?}", ton_supply);
+		info!("bitfinity icp : {:?}", bitfinity_supply);
+		info!("ethereum icp : {:?}", ethereum_supply);
+		info!("osmosis icp : {:?}", osmosis_supply);
+		info!("sui icp : {:?}", sui_supply);
+		info!("base icp : {:?}", base_supply);
+		info!("solana icp : {:?}", solana_supply);
 
 		info!("ICP e_chain_amount: {:?}", &e_amount);
-		info!("ICP s_chain_amountt: {:?}", &icp_amount);
+		info!("ICP s_chain_amount: {:?}", &icp_amount);
 		info!("ICP hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
@@ -363,9 +243,18 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+
 		if e_amount != 0 && icp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
-				warn!("dkp difference is greater than 1%");
+				warn!("icp difference is greater than 1%");
+				//目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链会小于1%以及暂停
+				let _ = check_chain("osmosis-1", icp_token_id, osmosis_supply, db).await?;
+				let _ = check_chain("Bitfinity", icp_token_id, bitfinity_supply, db).await?;
+				let _ = check_chain("Ethereum", icp_token_id, ethereum_supply, db).await?;
+				let _ = check_chain("Ton", icp_token_id, ton_supply, db).await?;
+				let _ = check_chain("eSui", icp_token_id, sui_supply, db).await?;
+				let _ = check_chain("Base", icp_token_id, base_supply, db).await?;
+				let _ = check_chain("eSolana", icp_token_id, solana_supply, db).await?;
 			}
 		}
 
@@ -377,6 +266,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("EICP_HOPE_YOU_GET_RICH", |agent, canister_id| async move {
 		info!("syncing tokens on HOPE_YOU_GET_RICH canister ledgers... ");
+		let rich_token_id = "Bitcoin-runes-HOPE•YOU•GET•RICH";
 
 		let arg = Encode!(&Vec::<u8>::new())?;
 		let ret = agent
@@ -428,45 +318,75 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		)
 		.await?;
 
-		info!("solana Rich : {:?}", solana);
-		info!("bob Rich : {:?}", bob);
-		info!("rootstock Rich : {:?}", rootstock);
-		info!("ethereum Rich : {:?}", ethereum);
-		info!("bevm Rich : {:?}", bevm);
-		info!("xlayer Rich : {:?}", xlayer);
-		info!("merlin Rich : {:?}", merlin);
-		info!("ailayer Rich : {:?}", ailayer);
-		info!("eicp Rich : {:?}", eicp);
-		info!("bitfinity Rich : {:?}", bitfinity);
-		info!("bsquared Rich : {:?}", bsquared);
-		info!("ton Rich : {:?}", ton);
-		info!("bitlayer Rich : {:?}", bitlayer);
-		info!("core Rich : {:?}", core);
-		info!("base Rich : {:?}", base);
+		// info!("solana Rich : {:?}", solana);
+		// info!("bob Rich : {:?}", bob);
+		// info!("rootstock Rich : {:?}", rootstock);
+		// info!("ethereum Rich : {:?}", ethereum);
+		// info!("bevm Rich : {:?}", bevm);
+		// info!("xlayer Rich : {:?}", xlayer);
+		// info!("merlin Rich : {:?}", merlin);
+		// info!("ailayer Rich : {:?}", ailayer);
+		// info!("eicp Rich : {:?}", eicp);
+		// info!("bitfinity Rich : {:?}", bitfinity);
+		// info!("bsquared Rich : {:?}", bsquared);
+		// info!("ton Rich : {:?}", ton);
+		// info!("bitlayer Rich : {:?}", bitlayer);
+		// info!("core Rich : {:?}", core);
+		// info!("base Rich : {:?}", base);
 
-		let e_amount = eicp.parse::<u128>().unwrap_or_default()
-			+ bitfinity.parse::<u128>().unwrap_or_default()
-			+ ailayer.parse::<u128>().unwrap_or_default()
-			+ bitlayer.parse::<u128>().unwrap_or_default()
-			+ bsquared.parse::<u128>().unwrap_or_default()
-			+ bevm.parse::<u128>().unwrap_or_default()
-			+ bob.parse::<u128>().unwrap_or_default()
-			+ ethereum.parse::<u128>().unwrap_or_default()
-			+ ton.parse::<u128>().unwrap_or_default()
-			+ solana.parse::<u128>().unwrap_or_default()
-			+ rootstock.parse::<u128>().unwrap_or_default()
-			+ xlayer.parse::<u128>().unwrap_or_default()
-			+ merlin.parse::<u128>().unwrap_or_default()
-			+ core.parse::<u128>().unwrap_or_default()
-			+ base.parse::<u128>().unwrap_or_default();
+		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
+		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
+		let ailayer_supply = ailayer.parse::<u128>().unwrap_or_default();
+		let bitlayer_supply = bitlayer.parse::<u128>().unwrap_or_default();
+		let bsquared_supply = bsquared.parse::<u128>().unwrap_or_default();
+		let bevm_supply = bevm.parse::<u128>().unwrap_or_default();
+		let bob_supply = bob.parse::<u128>().unwrap_or_default();
+		let ethereum_supply = ethereum.parse::<u128>().unwrap_or_default();
+		let ton_supply = ton.parse::<u128>().unwrap_or_default();
+		let solana_supply = solana.parse::<u128>().unwrap_or_default();
+		let rootstock_supply = rootstock.parse::<u128>().unwrap_or_default();
+		let xlayer_supply = xlayer.parse::<u128>().unwrap_or_default();
+		let merlin_supply = merlin.parse::<u128>().unwrap_or_default();
+		let core_supply = core.parse::<u128>().unwrap_or_default();
+		let base_supply = base.parse::<u128>().unwrap_or_default();
+		info!("solana Rich : {:?}", solana_supply);
+		info!("bob Rich : {:?}", bob_supply);
+		info!("rootstock Rich : {:?}", rootstock_supply);
+		info!("ethereum Rich : {:?}", ethereum_supply);
+		info!("bevm Rich : {:?}", bevm_supply);
+		info!("xlayer Rich : {:?}", xlayer_supply);
+		info!("merlin Rich : {:?}", merlin_supply);
+		info!("ailayer Rich : {:?}", ailayer_supply);
+		info!("eicp Rich : {:?}", eicp_supply);
+		info!("bitfinity Rich : {:?}", bitfinity_supply);
+		info!("bsquared Rich : {:?}", bsquared_supply);
+		info!("ton Rich : {:?}", ton_supply);
+		info!("bitlayer Rich : {:?}", bitlayer_supply);
+		info!("core Rich : {:?}", core_supply);
+		info!("base Rich : {:?}", base_supply);
+
+		let e_amount =
+			eicp_supply
+				+ bitfinity_supply
+				+ ailayer_supply
+				+ bitlayer_supply
+				+ bsquared_supply
+				+ bevm_supply
+				+ bob_supply + ethereum_supply
+				+ ton_supply + solana_supply
+				+ rootstock_supply
+				+ xlayer_supply
+				+ merlin_supply
+				+ core_supply
+				+ base_supply;
 
 		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, "Bitcoin-runes-HOPE•YOU•GET•RICH".to_string()).await? {
+		for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
 		}
 
 		info!("RICH e_chain_amount: {:?}", &e_amount);
-		info!("RICH s_chain_amountt: {:?}", 0);
+		info!("RICH s_chain_amount: {:?}", 0);
 		info!("RICH hub_amount: {:?}", &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
@@ -479,16 +399,227 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 
-		if e_amount.ge(&hub_amount) {
-			if (hub_amount as f64) / (e_amount as f64) < 0.99 {
-				warn!("Rich difference is greater than 1%");
-			}
-		} else {
-			if (hub_amount as f64) / (e_amount as f64) < 0.99 {
-				warn!("Rich difference is greater than 1%");
-			}
+		if difference_btw_two_bigger_than_1_percentage(e_amount, hub_amount) {
+			warn!("Rich difference is greater than 1%");
+			// 15 chains
+			//目前eICP占大头，不会低于1%，一旦这个占比小了，Ton/eSolana/会小于1%以及暂停
+			let _ = check_chain("eICP", rich_token_id, eicp_supply, db).await?;
+			let _ = check_chain("Bitfinity", rich_token_id, bitfinity_supply, db).await?;
+			let _ = check_chain("AILayer", rich_token_id, ailayer_supply, db).await?;
+			let _ = check_chain("Bitlayer", rich_token_id, bitlayer_supply, db).await?;
+			let _ = check_chain("B² Network", rich_token_id, bsquared_supply, db).await?;
+			let _ = check_chain("bevm", rich_token_id, bevm_supply, db).await?;
+			let _ = check_chain("Bob", rich_token_id, bob_supply, db).await?;
+			let _ = check_chain("Ethereum", rich_token_id, ethereum_supply, db).await?;
+			let _ = check_chain("Ton", rich_token_id, ton_supply, db).await?;
+			let _ = check_chain("eSolana", rich_token_id, solana_supply, db).await?;
+			let _ = check_chain("RootStock", rich_token_id, rootstock_supply, db).await?;
+			let _ = check_chain("X Layer", rich_token_id, xlayer_supply, db).await?;
+			let _ = check_chain("Merlin", rich_token_id, merlin_supply, db).await?;
+			let _ = check_chain("Core", rich_token_id, core_supply, db).await?;
+			let _ = check_chain("Base", rich_token_id, base_supply, db).await?;
 		}
 		Ok(())
 	})
 	.await
 }
+
+// pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
+// 	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
+// 		info!("syncing tokens on CKETH canister ledgers... ");
+
+// 		let cketh_reqst = Account {
+// 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
+// 			subaccount: None,
+// 		};
+// 		let arg = Encode!(&cketh_reqst)?;
+// 		let ret = agent
+// 			.query(&canister_id, "icrc1_balance_of")
+// 			.with_arg(arg)
+// 			.call()
+// 			.await?;
+// 		let cketh_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+
+// 		let mut hub_amount = 0;
+// 		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckETH").await? {
+// 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+// 		}
+
+// 		let bitfinity = sync_with_bitfinity("0x242BbcB4f4F1b752Ae30757DC9AE9C24d9A9B640").await?;
+// 		info!("bitfinity ckETH : {:?}", bitfinity);
+
+// 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+// 		info!("ckETH e_chain_amount: {:?}", &e_amount);
+// 		info!("ckETH s_chain_amountt: {:?}", &cketh_amount);
+// 		info!("ckETH hub_amount: {:?}", &hub_amount);
+
+// 		let token_on_ledger = token_on_ledger::Model::new(
+// 			"sICP".to_string(),
+// 			"CKETH".to_string(),
+// 			18_i16,
+// 			e_amount.to_string(),
+// 			cketh_amount.clone(),
+// 			hub_amount.to_string(),
+// 		);
+// 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+// 		if e_amount != 0 && cketh_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+// 			if difference_warning(e_amount, cketh_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+// 				warn!("ckETH difference is greater than 1%");
+// 			}
+// 		}
+
+// 		Ok(())
+// 	})
+// 	.await
+// }
+
+// pub async fn sync_ckusdt(db: &DbConn) -> Result<(), Box<dyn Error>> {
+// 	with_canister("CKUSDT_CANISTER_ID", |agent, canister_id| async move {
+// 		info!("syncing tokens on CKUSDT canister ledgers... ");
+
+// 		let ckusdt_reqst = Account {
+// 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
+// 			subaccount: None,
+// 		};
+// 		let arg = Encode!(&ckusdt_reqst)?;
+// 		let ret = agent
+// 			.query(&canister_id, "icrc1_balance_of")
+// 			.with_arg(arg)
+// 			.call()
+// 			.await?;
+// 		let ckusdt_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+
+// 		let mut hub_amount = 0;
+// 		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-ckUSDT").await? {
+// 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+// 		}
+
+// 		let bitfinity = sync_with_bitfinity("0xe613EBD1eAe99D824Da8A6C33eC833A62bC04B5a").await?;
+// 		info!("bitfinity ckusdt : {:?}", bitfinity);
+
+// 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+// 		info!("ckUSDT e_chain_amount: {:?}", &e_amount);
+// 		info!("ckUSDT s_chain_amountt: {:?}", &ckusdt_amount);
+// 		info!("ckUSDT hub_amount: {:?}", &hub_amount);
+
+// 		let token_on_ledger = token_on_ledger::Model::new(
+// 			"sICP".to_string(),
+// 			"CKUSDT".to_string(),
+// 			6_i16,
+// 			e_amount.to_string(),
+// 			ckusdt_amount.clone(),
+// 			hub_amount.to_string(),
+// 		);
+// 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+// 		if e_amount != 0 && ckusdt_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+// 			if difference_warning(e_amount, ckusdt_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+// 				warn!("ckusdt difference is greater than 1%");
+// 			}
+// 		}
+
+// 		Ok(())
+// 	})
+// 	.await
+// }
+
+// pub async fn sync_neuron_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
+// 	with_canister("NEURON_CANISTER_ID", |agent, canister_id| async move {
+// 		info!("syncing tokens on NEURON canister ledgers... ");
+
+// 		let nicp_reqst = Account {
+// 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
+// 			subaccount: None,
+// 		};
+// 		let arg = Encode!(&nicp_reqst)?;
+// 		let ret = agent
+// 			.query(&canister_id, "icrc1_balance_of")
+// 			.with_arg(arg)
+// 			.call()
+// 			.await?;
+// 		let nicp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+
+// 		let mut hub_amount = 0;
+// 		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-nICP").await? {
+// 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+// 		}
+
+// 		let bitfinity = sync_with_bitfinity("0x2a78A5f819393105a54F21AdeB4a8b68C5030b02").await?;
+// 		info!("bitfinity nICP : {:?}", bitfinity);
+
+// 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+// 		info!("nICP e_chain_amount: {:?}", &e_amount);
+// 		info!("nICP s_chain_amountt: {:?}", &nicp_amount);
+// 		info!("nICP hub_amount: {:?}", &hub_amount);
+
+// 		let token_on_ledger = token_on_ledger::Model::new(
+// 			"sICP".to_string(),
+// 			"neuron ICP".to_string(),
+// 			8_i16,
+// 			e_amount.to_string(),
+// 			nicp_amount.clone(),
+// 			hub_amount.to_string(),
+// 		);
+// 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+// 		if e_amount != 0 && nicp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+// 			if difference_warning(e_amount, nicp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+// 				warn!("nicp difference is greater than 1%");
+// 			}
+// 		}
+
+// 		Ok(())
+// 	})
+// 	.await
+// }
+
+// pub async fn sync_dragginz(db: &DbConn) -> Result<(), Box<dyn Error>> {
+// 	with_canister("DRAGGIN_CANISTER_ID", |agent, canister_id| async move {
+// 		info!("syncing tokens on NEURON canister ledgers... ");
+
+// 		let nicp_reqst = Account {
+// 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
+// 			subaccount: None,
+// 		};
+// 		let arg = Encode!(&nicp_reqst)?;
+// 		let ret = agent
+// 			.query(&canister_id, "icrc1_balance_of")
+// 			.with_arg(arg)
+// 			.call()
+// 			.await?;
+// 		let dkp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
+
+// 		let mut hub_amount = 0;
+// 		for tamount in Query::get_all_amount_by_token(db, "sICP-icrc-DKP").await? {
+// 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+// 		}
+
+// 		let bitfinity = sync_with_bitfinity("0x6286e8464E2817818EF8c3353e91824f680354d2").await?;
+// 		info!("bitfinity dkp : {:?}", bitfinity);
+
+// 		let e_amount = bitfinity.parse::<u128>().unwrap_or_default();
+
+// 		info!("dkp e_chain_amount: {:?}", &e_amount);
+// 		info!("dkp s_chain_amountt: {:?}", &dkp_amount);
+// 		info!("dkp hub_amount: {:?}", &hub_amount);
+
+// 		let token_on_ledger = token_on_ledger::Model::new(
+// 			"sICP".to_string(),
+// 			"Draggin Karma Points".to_string(),
+// 			8_i16,
+// 			e_amount.to_string(),
+// 			dkp_amount.clone(),
+// 			hub_amount.to_string(),
+// 		);
+// 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+// 		if e_amount != 0 && dkp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+// 			if difference_warning(e_amount, dkp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+// 				warn!("dkp difference is greater than 1%");
+// 			}
+// 		}
+
+// 		Ok(())
+// 	})
+// 	.await
+// }

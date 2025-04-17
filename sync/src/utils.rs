@@ -99,3 +99,14 @@ pub fn difference_warning(a: u128, b: u128, c: u128) -> bool {
 	}
 	false
 }
+
+pub fn difference_btw_two_bigger_than_1_percentage(a: u128, b: u128) -> bool {
+	let numbers = vec![a, b];
+	let mut sorted_numbers = numbers.clone();
+	sorted_numbers.sort();
+
+	if (sorted_numbers[0] as f64) / (sorted_numbers[1] as f64) < 0.99 {
+		return true;
+	}
+	false
+}
