@@ -424,6 +424,45 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	.await
 }
 
+pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16 ) -> Result<(), Box<dyn Error>> {
+	with_canister(canister, |agent, canister_id| async move {
+		info!("syncing tokens on {:?} canister ledgers... ", canister);
+
+		let arg = Encode!(&Vec::<u8>::new())?;
+		let ret = agent
+			.query(&canister_id, "icrc1_total_supply")
+			.with_arg(arg)
+			.call()
+			.await?;
+		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
+		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
+
+		let mut hub_amount = 0;
+		if let Some(chain_token) = Query::get_token_amount_by_id(db,token.to_string(), "eICP".to_string()).await? {
+			hub_amount = chain_token.amount.parse::<u128>().unwrap_or(0)
+		}
+
+		info!("{:?} e_chain_amount: {:?}", &canister, &eicp_supply);
+		info!("{:?} s_chain_amount: {:?}", &canister, 0);
+		info!("{:?} hub_amount: {:?}", &canister, &hub_amount);
+
+		let token_on_ledger = token_on_ledger::Model::new(
+			"RUNES".to_string(),
+			token.to_string(),
+			decimal,
+			eicp_supply.to_string(),
+			"0".to_string(),
+			hub_amount.clone().to_string(),
+		);
+		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+		if difference_btw_two_bigger_than_1_percentage(eicp_supply, hub_amount) {
+			warn!("{:?} is greater than 1%", canister);
+			let _ = check_chain("eICP", token, eicp_supply, db).await?;
+		}
+		Ok(())
+	}).await
+}
+
 // pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 // 	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
 // 		info!("syncing tokens on CKETH canister ledgers... ");

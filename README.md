@@ -34,5 +34,18 @@ export CKUSDT_CANISTER_ID=cngnf-vqaaa-aaaar-qag4q-cai
 export NEURON_CANISTER_ID=buwm7-7yaaa-aaaar-qagva-cai
 export DRAGGIN_CANISTER_ID=zfcdd-tqaaa-aaaaq-aaaga-cai
 export ICP_CANISTER_ID=ryjl3-tyaaa-aaaaa-aaaba-cai
-export ALCHEMY_KEY=
+
+export ODINAPE_ID_BVAE_ODIN=26jmx-laaaa-aaaar-qaqqq-cai
+export ODINDOG_ID_YTTL_ODIN=eazb6-tqaaa-aaaar-qan2a-cai
+export ODINGOLD_ID_VACP_ODIN=6pkg6-jaaaa-aaaar-qapna-cai
+export SATOSHI_ID_OXTM_ODIN=sf5ra-laaaa-aaaar-qaoba-cai
+export ODINSTAS_ID_JXGT_ODIN=sxns3-bqaaa-aaaar-qarhq-cai
+export BITCAT_ID_EOSE_ODIN=7mgpy-5yaaa-aaaar-qaplq-cai
+export ODINCAT_ID_DHGX_ODIN=sl74i-qqaaa-aaaar-qaoaa-cai
+export FORSETISCN_ID_COIU_ODIN=tta5j-yqaaa-aaaar-qarbq-cai
+export PI_ID_YZHI_ODIN=5n73b-zqaaa-aaaar-qapga-cai
+export RATS_ID_JXIT_ODIN=wpnto-vyaaa-aaaar-qao3q-cai
+export ICONFUCIUS_ID_RVMN_ODIN=5kijx-siaaa-aaaar-qaqda-cai
+export DRAK_ID_HCNC_ODIN=qdtxp-eqaaa-aaaar-qarjq-cai
+export SPARKS_ID_DTEH_ODIN=fkwde-raaaa-aaaar-qan5a-cai
 ```
