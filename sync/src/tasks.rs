@@ -38,10 +38,9 @@ pub async fn execute_sync_tasks(db_conn: Arc<DbConn>) {
 	// 	let _ = Delete::remove_token_on_ledgers(&db_conn).await;
 	// };
 
-	let sync_tokens_on_chains_from_hub =
-		spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
-			sync_tokens_on_chains(&db_conn).await
-		});
+	let sync_tokens_on_chains_from_hub = spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
+		sync_tokens_on_chains(&db_conn).await
+	});
 	let sync_tokens_on_ledgers = spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
 		sync_tokens_on_ledgers(&db_conn).await
 	});
@@ -53,11 +52,7 @@ pub async fn sync_tokens_on_chains(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("syncing the hub ... ");
 
 		let args = Encode!(&Vec::<u8>::new())?;
-		let ret = agent
-			.query(&canister_id, "get_token_position_size")
-			.with_arg(args)
-			.call()
-			.await?;
+		let ret = agent.query(&canister_id, "get_token_position_size").with_arg(args).call().await?;
 
 		if let Ok(tokens_on_chains_size) = Decode!(&ret, Result<u64, OmnityError>)? {
 			let mut from_seq = 0u64;
@@ -92,6 +87,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_neuron_icp(&db).await?;
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
+	// 13 + 2
 	sync_rune(&db, "ODINAPE_ID_BVAE_ODIN", "Bitcoin-runes-ODINAPE•ID•BVAE•ODIN", 8_i16).await?;
 	sync_rune(&db, "ODINDOG_ID_YTTL_ODIN", "Bitcoin-runes-ODINDOG•ID•YTTL•ODIN", 8_i16).await?;
 	sync_rune(&db, "ODINGOLD_ID_VACP_ODIN", "Bitcoin-runes-ODINGOLD•ID•VACP•ODIN", 8_i16).await?;
@@ -105,6 +101,9 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	sync_rune(&db, "ICONFUCIUS_ID_RVMN_ODIN", "Bitcoin-runes-ICONFUCIUS•ID•RVMN•ODIN", 8_i16).await?;
 	sync_rune(&db, "DRAK_ID_HCNC_ODIN", "Bitcoin-runes-DRAK•ID•HCNC•ODIN", 8_i16).await?;
 	sync_rune(&db, "SPARKS_ID_DTEH_ODIN", "Bitcoin-runes-SPARKS•ID•DTEH•ODIN", 8_i16).await?;
+	// 2
+	sync_rune(&db, "BITPANDA_ID_UUMF_ODIN", "Bitcoin-runes-BITPANDA•ID•UUMF•ODIN", 8_i16).await?;
+	sync_rune(&db, "GHOSTNODE_ID_ZVVO_ODIN", "Bitcoin-runes-GHOSTNODE•ID•ZVVO•ODIN", 8_i16).await?;
 	sync_ckbtc(&db).await?;
 	sync_icp(&db).await?;
 	sync_rich(&db).await

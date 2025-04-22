@@ -22,86 +22,7 @@ struct EthcallRpcRequest {
 	params: Vec<serde_json::Value>,
 }
 
-pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let rpc_request = RpcRequest {
-		id: 1,
-		jsonrpc: "2.0".to_string(),
-		method: "suix_getTotalSupply".to_string(),
-		params: vec![ledger_id.to_string()],
-	};
-
-	let client = reqwest::Client::new();
-	let response = client
-		.post("https://fullnode.mainnet.sui.io:443")
-		.json(&rpc_request)
-		.send()
-		.await?;
-	let body = response.text().await?;
-	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
-		if let Some(layer_one) = value.as_object() {
-			if let Some(layer_two) = layer_one.get("result") {
-				if let Some(layer_three) = layer_two.as_object() {
-					if let Some(ttl) = layer_three.get("value") {
-						let mut total_supply = ttl.to_string();
-						total_supply.replace_range(0..1, "");
-						total_supply.replace_range((total_supply.len() - 1).., "");
-						return Ok(total_supply);
-					} else {
-						return Err("sui error5".into());
-					}
-				} else {
-					return Err("sui error4".into());
-				}
-			} else {
-				return Err("sui error3".into());
-			}
-		} else {
-			return Err("sui error2".into());
-		}
-	} else {
-		return Err("sui error1".into());
-	}
-}
-
-// no decimals & deprecated
-pub async fn _sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let url = "https://api.blockvision.org/v2/sui/coin/detail?coinType=".to_string() + ledger_id;
-	let client = reqwest::Client::new();
-	let response = client
-		.get(url)
-		.header("accept", "application/json")
-		.header("x-api-key", "2rOYaFDPviJAqMF8u0DwdBXlvK7")
-		.send()
-		.await?;
-
-	let body = response.text().await?;
-	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
-		if let Some(layer_one) = value.as_object() {
-			if let Some(layer_two) = layer_one.get("result") {
-				if let Some(layer_three) = layer_two.as_object() {
-					if let Some(ttl) = layer_three.get("totalSupply") {
-						let mut total_supply = ttl.to_string();
-						total_supply.replace_range(0..1, "");
-						total_supply.replace_range((total_supply.len() - 1).., "");
-						return Ok(total_supply);
-					} else {
-						return Err("sui error5".into());
-					}
-				} else {
-					return Err("sui error4".into());
-				}
-			} else {
-				return Err("sui error3".into());
-			}
-		} else {
-			return Err("sui error2".into());
-		}
-	} else {
-		return Err("sui error1".into());
-	}
-}
-
-// For ROOTSTOCK/MERLIN/XLAYER/CORE/BASE
+// For ROOTSTOCK/MERLIN/XLAYER/CORE/BASE/AILAYER
 pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";
 	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
@@ -150,6 +71,47 @@ pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Bo
 		}
 	} else {
 		return Err("eth call error3".into());
+	}
+}
+
+pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let rpc_request = RpcRequest {
+		id: 1,
+		jsonrpc: "2.0".to_string(),
+		method: "suix_getTotalSupply".to_string(),
+		params: vec![ledger_id.to_string()],
+	};
+
+	let client = reqwest::Client::new();
+	let response = client
+		.post("https://fullnode.mainnet.sui.io:443")
+		.json(&rpc_request)
+		.send()
+		.await?;
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(layer_two) = layer_one.get("result") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(ttl) = layer_three.get("value") {
+						let mut total_supply = ttl.to_string();
+						total_supply.replace_range(0..1, "");
+						total_supply.replace_range((total_supply.len() - 1).., "");
+						return Ok(total_supply);
+					} else {
+						return Err("sui error5".into());
+					}
+				} else {
+					return Err("sui error4".into());
+				}
+			} else {
+				return Err("sui error3".into());
+			}
+		} else {
+			return Err("sui error2".into());
+		}
+	} else {
+		return Err("sui error1".into());
 	}
 }
 
@@ -207,37 +169,6 @@ pub async fn sync_with_solana(ledger_id: &str) -> Result<String, Box<dyn Error>>
 		}
 	} else {
 		return Err("solana error1".into());
-	}
-}
-
-// deprecated
-pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
-	let transport = web3::transports::Http::new("https://api.zan.top/core-mainnet")?;
-	let web3 = web3::Web3::new(transport);
-	let url = "https://openapi.coredao.org/api?module=contract&action=getabi&address=".to_string()
-		+ ledger_id
-		+ "&apikey="
-		+ api_token;
-
-	let client = reqwest::Client::new();
-	let response = client.get(url).send().await?;
-	let body = response.text().await?;
-
-	if let Ok(vjson) = serde_json::from_str::<serde_json::Value>(&body) {
-		let abi = match vjson["result"].as_str() {
-			Some(abi_str) => abi_str,
-			None => {
-				return Err("Error: Unable to fetch ABI".into());
-			}
-		};
-		let contract_address = Address::from_str(ledger_id)?;
-		let contract = Contract::from_json(web3.eth(), contract_address, abi.as_bytes())?;
-		let result: U256 = contract
-			.query("totalSupply", (), None, Options::default(), None)
-			.await?;
-		return Ok(result.to_string());
-	} else {
-		return Err("core error".into());
 	}
 }
 
@@ -350,29 +281,6 @@ pub async fn sync_with_bitfinity(ledger_id: &str) -> Result<String, Box<dyn Erro
 	}
 }
 
-pub async fn sync_with_ailayer(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let url = "https://mainnet-explorer.ailayer.xyz/api/v2/tokens/".to_string() + ledger_id;
-	let client = reqwest::Client::new();
-	let response = client.get(url).send().await?;
-	let body = response.text().await?;
-	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
-		if let Some(layer_one) = value.as_object() {
-			if let Some(ttl) = layer_one.get("total_supply") {
-				let mut total_supply = ttl.to_string();
-				total_supply.replace_range(0..1, "");
-				total_supply.replace_range((total_supply.len() - 1).., "");
-				return Ok(total_supply);
-			} else {
-				return Err("ai layer error1".into());
-			}
-		} else {
-			return Err("ai layer error2".into());
-		}
-	} else {
-		return Err("ai layer error3".into());
-	}
-}
-
 pub async fn sync_with_bitlayer(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	let url =
 		"https://api.btrscan.com/scan/api?module=token&action=tokensupply&contractaddress=".to_string() + ledger_id;
@@ -478,5 +386,97 @@ pub async fn sync_with_bob(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 		}
 	} else {
 		return Err("bob error3".into());
+	}
+}
+
+// deprecated
+pub async fn sync_with_ailayer(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let url = "https://mainnet-explorer.ailayer.xyz/api/v2/tokens/".to_string() + ledger_id;
+	let client = reqwest::Client::new();
+	let response = client.get(url).send().await?;
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(ttl) = layer_one.get("total_supply") {
+				let mut total_supply = ttl.to_string();
+				total_supply.replace_range(0..1, "");
+				total_supply.replace_range((total_supply.len() - 1).., "");
+				return Ok(total_supply);
+			} else {
+				return Err("ai layer error1".into());
+			}
+		} else {
+			return Err("ai layer error2".into());
+		}
+	} else {
+		return Err("ai layer error3".into());
+	}
+}
+// no decimals & deprecated
+pub async fn _sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+	let url = "https://api.blockvision.org/v2/sui/coin/detail?coinType=".to_string() + ledger_id;
+	let client = reqwest::Client::new();
+	let response = client
+		.get(url)
+		.header("accept", "application/json")
+		.header("x-api-key", "2rOYaFDPviJAqMF8u0DwdBXlvK7")
+		.send()
+		.await?;
+
+	let body = response.text().await?;
+	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+		if let Some(layer_one) = value.as_object() {
+			if let Some(layer_two) = layer_one.get("result") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(ttl) = layer_three.get("totalSupply") {
+						let mut total_supply = ttl.to_string();
+						total_supply.replace_range(0..1, "");
+						total_supply.replace_range((total_supply.len() - 1).., "");
+						return Ok(total_supply);
+					} else {
+						return Err("sui error5".into());
+					}
+				} else {
+					return Err("sui error4".into());
+				}
+			} else {
+				return Err("sui error3".into());
+			}
+		} else {
+			return Err("sui error2".into());
+		}
+	} else {
+		return Err("sui error1".into());
+	}
+}
+
+// deprecated
+pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
+	let transport = web3::transports::Http::new("https://api.zan.top/core-mainnet")?;
+	let web3 = web3::Web3::new(transport);
+	let url = "https://openapi.coredao.org/api?module=contract&action=getabi&address=".to_string()
+		+ ledger_id
+		+ "&apikey="
+		+ api_token;
+
+	let client = reqwest::Client::new();
+	let response = client.get(url).send().await?;
+	let body = response.text().await?;
+
+	if let Ok(vjson) = serde_json::from_str::<serde_json::Value>(&body) {
+		let abi = match vjson["result"].as_str() {
+			Some(abi_str) => abi_str,
+			None => {
+				return Err("Error: Unable to fetch ABI".into());
+			}
+		};
+		let contract_address = Address::from_str(ledger_id)?;
+		let contract = Contract::from_json(web3.eth(), contract_address, abi.as_bytes())?;
+		let result: U256 = contract
+			.query("totalSupply", (), None, Options::default(), None)
+			.await?;
+		return Ok(result.to_string());
+	} else {
+		return Err("core error".into());
 	}
 }

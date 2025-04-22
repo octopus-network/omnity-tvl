@@ -22,11 +22,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			subaccount: None,
 		};
 		let arg = Encode!(&ckbtc_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
+		let ret = agent.query(&canister_id, "icrc1_balance_of").with_arg(arg).call().await?;
 		let ckbtc_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
 		let mut hub_amount = 0;
@@ -48,10 +44,8 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			break;
 		}
 
-		let osmosis = sync_with_osmosis(
-			"factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC",
-		)
-		.await?;
+		let osmosis =
+			sync_with_osmosis("factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC").await?;
 		let bitfinity = sync_with_bitfinity("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35").await?;
 		let ton = sync_with_ton("EQD3IJCxBHFRNCFFLmtnoIyMEYt_Zio3WT0YQQujA2tSuCTZ").await?;
 		// let core = sync_with_core(
@@ -59,11 +53,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		// 	"9ede2feeb2404baabaa4254590950ec6",
 		// )
 		// .await?;
-		let core = sync_with_eth_call(
-			"0x51ccde9ca75d95bb55ece1775fcbff91324b18a6",
-			"https://rpc-core.icecreamswap.com",
-		)
-		.await?;
+		let core = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://rpc-core.icecreamswap.com").await?;
 		// info!("ton ckbtc : {:?}", ton);
 		// info!("bitfinity ckbtc : {:?}", bitfinity);
 		// info!("core ckbtc : {:?}", core);
@@ -109,12 +99,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	.await
 }
 
-async fn check_chain(
-	chain_id: &str,
-	token_id: &str,
-	target_chain_supply: u128,
-	db: &DbConn,
-) -> Result<(), Box<dyn Error>> {
+async fn check_chain(chain_id: &str, token_id: &str, target_chain_supply: u128, db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
 		let args = Encode!(&chain_id)?;
 		let ret = agent.query(&canister_id, "get_chain").with_arg(args).call().await?;
@@ -123,8 +108,7 @@ async fn check_chain(
 			info!("{:?} chain_state: {:?}", chain_meta.chain_id, chain_meta.chain_state);
 
 			if chain_meta.chain_state == ChainState::Active {
-				let chain_on_hub =
-					Query::get_token_amount_by_id(db, token_id.to_string(), chain_id.to_string()).await?;
+				let chain_on_hub = Query::get_token_amount_by_id(db, token_id.to_string(), chain_id.to_string()).await?;
 				if let Some(chain_token) = chain_on_hub {
 					let huh_amount = chain_token.amount.parse::<u128>().unwrap_or(0);
 					info!("huh_amount1: {:?}", huh_amount);
@@ -134,22 +118,22 @@ async fn check_chain(
 						info!("huh_amount: {:?}", huh_amount);
 						info!("target_chain_supply: {:?}", target_chain_supply);
 						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
-						// 如错误停，可屏蔽这段先
-						info!("trying to pause {:?} chain ... ", chain_id);
-						let arg: Vec<u8> = Encode!(&chain_id)?;
-						match agent
-							.update(&canister_id, "audit_stop_chain")
-							.with_arg(arg)
-							.call_and_wait()
-							.await
-						{
-							Ok(_ret) => {
-								info!("complete to pause a chain ... {:?}", ret);
-							}
-							Err(e) => {
-								info!("err ... {:?}", e);
-							}
-						}
+						// // 如错误停，可屏蔽这段先
+						// info!("trying to pause {:?} chain ... ", chain_id);
+						// let arg: Vec<u8> = Encode!(&chain_id)?;
+						// match agent
+						// 	.update(&canister_id, "audit_stop_chain")
+						// 	.with_arg(arg)
+						// 	.call_and_wait()
+						// 	.await
+						// {
+						// 	Ok(_ret) => {
+						// 		info!("complete to pause a chain ... {:?}", ret);
+						// 	}
+						// 	Err(e) => {
+						// 		info!("err ... {:?}", e);
+						// 	}
+						// }
 					}
 				}
 			}
@@ -169,11 +153,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			subaccount: None,
 		};
 		let arg = Encode!(&icp_reqst)?;
-		let ret = agent
-			.query(&canister_id, "icrc1_balance_of")
-			.with_arg(arg)
-			.call()
-			.await?;
+		let ret = agent.query(&canister_id, "icrc1_balance_of").with_arg(arg).call().await?;
 		let icp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
 		let mut hub_amount = 0;
@@ -181,16 +161,9 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
 		}
 
-		let osmosis = sync_with_osmosis(
-			"factory/osmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm/sICP-native-ICP",
-		)
-		.await?;
+		let osmosis = sync_with_osmosis("factory/osmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm/sICP-native-ICP").await?;
 		let bitfinity = sync_with_bitfinity("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6").await?;
-		let ethereum = sync_with_ethereum(
-			"0x8e6e7cd8db9c9b73c6c6221702146840b12d6763",
-			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
-		)
-		.await?;
+		let ethereum = sync_with_ethereum("0x8e6e7cd8db9c9b73c6c6221702146840b12d6763", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
 		let ton = sync_with_ton("EQCW0ddLCQAn011bb8T2Xdoa40v6A_bL3cfjn0bplXdSKnWa").await?;
 		// let sui = sync_with_sui("
 		// 0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP") 	.await?
@@ -198,11 +171,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		// 	.unwrap_or_default()
 		// 	* 100_000_000.0;
 		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP").await?;
-		let base = sync_with_eth_call(
-			"0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35",
-			"https://base-pokt.nodies.app",
-		)
-		.await?;
+		let base = sync_with_eth_call("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35", "https://base-pokt.nodies.app").await?;
 		let solana = sync_with_solana("79yjxQmS7NWd3a5ZDrVrVcP9xEPsT4tFCys5SUdG8VxN").await?;
 		// info!("ton icp : {:?}", ton);
 		// info!("bitfinity icp : {:?}", bitfinity);
@@ -219,8 +188,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let base_supply = base.parse::<u128>().unwrap_or_default();
 		let solana_supply = solana.parse::<u128>().unwrap_or_default();
 
-		let e_amount =
-			osmosis_supply + bitfinity_supply + ethereum_supply + ton_supply + sui_supply + base_supply + solana_supply;
+		let e_amount = osmosis_supply + bitfinity_supply + ethereum_supply + ton_supply + sui_supply + base_supply + solana_supply;
 
 		info!("ton icp : {:?}", ton_supply);
 		info!("bitfinity icp : {:?}", bitfinity_supply);
@@ -247,7 +215,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		if e_amount != 0 && icp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
 				warn!("icp difference is greater than 1%");
-				//目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链会小于1%以及暂停
+				//目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链Ton/eSui/eSolana会小于1%以及暂停
 				let _ = check_chain("osmosis-1", icp_token_id, osmosis_supply, db).await?;
 				let _ = check_chain("Bitfinity", icp_token_id, bitfinity_supply, db).await?;
 				let _ = check_chain("Ethereum", icp_token_id, ethereum_supply, db).await?;
@@ -269,23 +237,16 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let rich_token_id = "Bitcoin-runes-HOPE•YOU•GET•RICH";
 
 		let arg = Encode!(&Vec::<u8>::new())?;
-		let ret = agent
-			.query(&canister_id, "icrc1_total_supply")
-			.with_arg(arg)
-			.call()
-			.await?;
+		let ret = agent.query(&canister_id, "icrc1_total_supply").with_arg(arg).call().await?;
 		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
 		let bitfinity = sync_with_bitfinity("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
-		let ailayer = sync_with_ailayer("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
+		// let ailayer = sync_with_ailayer("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4").await?;
+		let ailayer = sync_with_eth_call("0xFD4dE66ECA49799bDdE66eB33654E2198Ab7bba4", "https://mainnet-rpc.ailayer.xyz").await?;
 		let bitlayer = sync_with_bitlayer("0xb32b737817ba8ff81c696ca8fbd4832cca5751a6").await?;
 		let bsquared = sync_with_bsquared("0x20dD93ad6675E81a635C7be034dC1C9Ce0AE2DE4").await?;
 		let bevm = sync_with_bevm("0xB76fD1B6CDA18a8cFA255E23059c0bB1624bB5F9").await?;
 		let bob = sync_with_bob("0x8f9568BB47b7772f334CcceF4652C9ac7678f21a").await?;
-		let ethereum = sync_with_ethereum(
-			"0xD14fAd0Fe8175aFD3f4c22B25736E11CF42341A5",
-			"275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P",
-		)
-		.await?;
+		let ethereum = sync_with_ethereum("0xD14fAd0Fe8175aFD3f4c22B25736E11CF42341A5", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
 		let ton = sync_with_ton("EQBGKSkJ307rZY46kqSwwmHskOwSPEO5urm5EZ_EWFyk3bEO").await?;
 		let solana = sync_with_solana("8j45TBhQU6DQhRvoYd9dpQWzTNKstB6kpnfZ3pKDCxff").await?;
 
@@ -295,28 +256,15 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let url = "https://rootstock-mainnet.g.alchemy.com/v2/".to_string() + &key;
 		let rootstock = sync_with_eth_call("0xb943b047473218a8e0fc637e96136071ffa3f842", &url).await?;
 
-		let xlayer =
-			sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://xlayer.drpc.org").await?;
-		let merlin = sync_with_eth_call(
-			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
-			"https://rpc.merlinchain.io",
-		)
-		.await?;
+		let xlayer = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://xlayer.drpc.org").await?;
+		let merlin = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc.merlinchain.io").await?;
 		// let core = sync_with_core(
 		// 	"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
 		// 	"9ede2feeb2404baabaa4254590950ec6",
 		// )
 		// .await?;
-		let core = sync_with_eth_call(
-			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
-			"https://rpc-core.icecreamswap.com",
-		)
-		.await?;
-		let base = sync_with_eth_call(
-			"0xfd4de66eca49799bdde66eb33654e2198ab7bba4",
-			"https://base-pokt.nodies.app",
-		)
-		.await?;
+		let core = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc-core.icecreamswap.com").await?;
+		let base = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://base-pokt.nodies.app").await?;
 
 		// info!("solana Rich : {:?}", solana);
 		// info!("bob Rich : {:?}", bob);
@@ -424,21 +372,17 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	.await
 }
 
-pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16 ) -> Result<(), Box<dyn Error>> {
+pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -> Result<(), Box<dyn Error>> {
 	with_canister(canister, |agent, canister_id| async move {
 		info!("syncing tokens on {:?} canister ledgers... ", canister);
 
 		let arg = Encode!(&Vec::<u8>::new())?;
-		let ret = agent
-			.query(&canister_id, "icrc1_total_supply")
-			.with_arg(arg)
-			.call()
-			.await?;
+		let ret = agent.query(&canister_id, "icrc1_total_supply").with_arg(arg).call().await?;
 		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
 
 		let mut hub_amount = 0;
-		if let Some(chain_token) = Query::get_token_amount_by_id(db,token.to_string(), "eICP".to_string()).await? {
+		if let Some(chain_token) = Query::get_token_amount_by_id(db, token.to_string(), "eICP".to_string()).await? {
 			hub_amount = chain_token.amount.parse::<u128>().unwrap_or(0)
 		}
 
@@ -460,7 +404,8 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16 ) 
 			let _ = check_chain("eICP", token, eicp_supply, db).await?;
 		}
 		Ok(())
-	}).await
+	})
+	.await
 }
 
 // pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {

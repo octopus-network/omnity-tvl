@@ -48,4 +48,6 @@ export RATS_ID_JXIT_ODIN=wpnto-vyaaa-aaaar-qao3q-cai
 export ICONFUCIUS_ID_RVMN_ODIN=5kijx-siaaa-aaaar-qaqda-cai
 export DRAK_ID_HCNC_ODIN=qdtxp-eqaaa-aaaar-qarjq-cai
 export SPARKS_ID_DTEH_ODIN=fkwde-raaaa-aaaar-qan5a-cai
+export BITPANDA_ID_UUMF_ODIN=7xvh7-baaaa-aaaar-qaqmq-cai
+export GHOSTNODE_ID_ZVVO_ODIN=sx3gz-hqaaa-aaaar-qaoca-cai
 ```
