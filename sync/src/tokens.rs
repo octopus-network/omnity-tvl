@@ -73,6 +73,8 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("ckBTC e_chain_amount: {:?}", &e_amount);
 		info!("ckBTC s_chain_amount: {:?}", &ckbtc_amount);
 		info!("ckBTC hub_amount: {:?}", &hub_amount);
+		info!("ckBTC S-E差异: {:?}", &ckbtc_amount.parse::<u128>().unwrap_or(0) - &e_amount);
+		info!("ckBTC S-H差异: {:?}", &ckbtc_amount.parse::<u128>().unwrap_or(0) - &hub_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -118,22 +120,17 @@ async fn check_chain(chain_id: &str, token_id: &str, target_chain_supply: u128, 
 						info!("huh_amount: {:?}", huh_amount);
 						info!("target_chain_supply: {:?}", target_chain_supply);
 						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
-						// // 如错误停，可屏蔽这段先
-						// info!("trying to pause {:?} chain ... ", chain_id);
-						// let arg: Vec<u8> = Encode!(&chain_id)?;
-						// match agent
-						// 	.update(&canister_id, "audit_stop_chain")
-						// 	.with_arg(arg)
-						// 	.call_and_wait()
-						// 	.await
-						// {
-						// 	Ok(_ret) => {
-						// 		info!("complete to pause a chain ... {:?}", ret);
-						// 	}
-						// 	Err(e) => {
-						// 		info!("err ... {:?}", e);
-						// 	}
-						// }
+						// 如错误停，可屏蔽这段先
+						info!("trying to pause {:?} chain ... ", chain_id);
+						let arg: Vec<u8> = Encode!(&chain_id)?;
+						match agent.update(&canister_id, "audit_stop_chain").with_arg(arg).call_and_wait().await {
+							Ok(_ret) => {
+								info!("complete to pause a chain ... {:?}", ret);
+							}
+							Err(e) => {
+								info!("err ... {:?}", e);
+							}
+						}
 					}
 				}
 			}
@@ -201,6 +198,8 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("ICP e_chain_amount: {:?}", &e_amount);
 		info!("ICP s_chain_amount: {:?}", &icp_amount);
 		info!("ICP hub_amount: {:?}", &hub_amount);
+		info!("ICP S-E差异: {:?}", &icp_amount.parse::<u128>().unwrap_or(0) - &e_amount);
+		info!("ICP H-S差异: {:?}", &hub_amount - &icp_amount.parse::<u128>().unwrap_or(0));
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -336,6 +335,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("RICH e_chain_amount: {:?}", &e_amount);
 		info!("RICH s_chain_amount: {:?}", 0);
 		info!("RICH hub_amount: {:?}", &hub_amount);
+		info!("RICH H-E 差异: {:?}", &hub_amount - &e_amount);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"RUNES".to_string(),
@@ -389,6 +389,7 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		info!("{:?} e_chain_amount: {:?}", &canister, &eicp_supply);
 		info!("{:?} s_chain_amount: {:?}", &canister, 0);
 		info!("{:?} hub_amount: {:?}", &canister, &hub_amount);
+		info!("{:?} H-E 差异: {:?}", &canister, &hub_amount.saturating_sub(eicp_supply));
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"RUNES".to_string(),
