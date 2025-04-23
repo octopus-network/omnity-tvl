@@ -87,7 +87,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_neuron_icp(&db).await?;
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
-	// 13 + 2
+	// 13 + 2 + 4
 	sync_rune(&db, "ODINAPE_ID_BVAE_ODIN", "Bitcoin-runes-ODINAPE•ID•BVAE•ODIN", 8_i16).await?;
 	sync_rune(&db, "ODINDOG_ID_YTTL_ODIN", "Bitcoin-runes-ODINDOG•ID•YTTL•ODIN", 8_i16).await?;
 	sync_rune(&db, "ODINGOLD_ID_VACP_ODIN", "Bitcoin-runes-ODINGOLD•ID•VACP•ODIN", 8_i16).await?;
@@ -104,6 +104,12 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// 2
 	sync_rune(&db, "BITPANDA_ID_UUMF_ODIN", "Bitcoin-runes-BITPANDA•ID•UUMF•ODIN", 8_i16).await?;
 	sync_rune(&db, "GHOSTNODE_ID_ZVVO_ODIN", "Bitcoin-runes-GHOSTNODE•ID•ZVVO•ODIN", 8_i16).await?;
+	// 4
+	sync_rune(&db, "BITCAT_ID_YRMO_ODIN", "Bitcoin-runes-BITCAT•ID•YRMO•ODIN", 8_i16).await?;
+	sync_rune(&db, "GOLDBTC_ID_PGZD_ODIN", "Bitcoin-runes-GOLDBTC•ID•PGZD•ODIN", 8_i16).await?;
+	sync_rune(&db, "AIDEX_ID_AZNX_ODIN", "Bitcoin-runes-AIDEX•ID•AZNX•ODIN", 8_i16).await?;
+	sync_rune(&db, "AOT_ID_GRMI_ODIN", "Bitcoin-runes-AOT•ID•GRMI•ODIN", 8_i16).await?;
+
 	sync_ckbtc(&db).await?;
 	sync_icp(&db).await?;
 	sync_rich(&db).await

@@ -50,4 +50,8 @@ export DRAK_ID_HCNC_ODIN=qdtxp-eqaaa-aaaar-qarjq-cai
 export SPARKS_ID_DTEH_ODIN=fkwde-raaaa-aaaar-qan5a-cai
 export BITPANDA_ID_UUMF_ODIN=7xvh7-baaaa-aaaar-qaqmq-cai
 export GHOSTNODE_ID_ZVVO_ODIN=sx3gz-hqaaa-aaaar-qaoca-cai
+export BITCAT_ID_YRMO_ODIN=xlwi6-kyaaa-aaaar-qarya-cai
+export GOLDBTC_ID_PGZD_ODIN=xfufw-riaaa-aaaar-qarza-cai
+export AIDEX_ID_AZNX_ODIN=vno2t-diaaa-aaaar-qarva-cai
+export AOT_ID_GRMI_ODIN=vrkac-uiaaa-aaaar-qarxa-cai
 ```
