@@ -73,8 +73,24 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("ckBTC e_chain_amount: {:?}", &e_amount);
 		info!("ckBTC s_chain_amount: {:?}", &ckbtc_amount);
 		info!("ckBTC hub_amount: {:?}", &hub_amount);
-		info!("ckBTC S-E差异: {:?}", &ckbtc_amount.parse::<u128>().unwrap_or(0) - &e_amount);
-		info!("ckBTC S-H差异: {:?}", &ckbtc_amount.parse::<u128>().unwrap_or(0) - &hub_amount);
+
+		let ckbtc_amount_u128 = ckbtc_amount.parse::<u128>().unwrap_or(0);
+		info!(
+			"ckBTC S-E差异: {:?}, 目前比例{:?} %",
+			&ckbtc_amount_u128 - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(ckbtc_amount_u128))
+				.unwrap_or_default()
+		);
+		info!(
+			"ckBTC S-H差异: {:?}, 目前比例{:?} %",
+			&ckbtc_amount_u128 - &hub_amount,
+			&hub_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(ckbtc_amount_u128))
+				.unwrap_or_default()
+		);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -86,9 +102,9 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 
-		if e_amount != 0 && ckbtc_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
+		if e_amount != 0 && ckbtc_amount_u128 != 0 && hub_amount != 0 {
 			// 可能parse出问题
-			if difference_warning(e_amount, ckbtc_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+			if difference_warning(e_amount, ckbtc_amount_u128, hub_amount) {
 				warn!("ckbtc difference is greater than 1%");
 				let _ = check_chain("osmosis-1", ckbtc_token_id, osmosis_supply, db).await?;
 				let _ = check_chain("Bitfinity", ckbtc_token_id, bitfinity_supply, db).await?;
@@ -121,16 +137,16 @@ async fn check_chain(chain_id: &str, token_id: &str, target_chain_supply: u128, 
 						info!("target_chain_supply: {:?}", target_chain_supply);
 						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
 						// 如错误停，可屏蔽这段先
-						info!("trying to pause {:?} chain ... ", chain_id);
-						let arg: Vec<u8> = Encode!(&chain_id)?;
-						match agent.update(&canister_id, "audit_stop_chain").with_arg(arg).call_and_wait().await {
-							Ok(_ret) => {
-								info!("complete to pause a chain ... {:?}", ret);
-							}
-							Err(e) => {
-								info!("err ... {:?}", e);
-							}
-						}
+						// warn!("trying to pause {:?} chain ... ", chain_id);
+						// let arg: Vec<u8> = Encode!(&chain_id)?;
+						// match agent.update(&canister_id,
+						// "audit_stop_chain").with_arg(arg).call_and_wait().await { 	Ok(_ret)
+						// => { 		info!("complete to pause a chain ... {:?}", ret);
+						// 	}
+						// 	Err(e) => {
+						// 		info!("err ... {:?}", e);
+						// 	}
+						// }
 					}
 				}
 			}
@@ -198,8 +214,24 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("ICP e_chain_amount: {:?}", &e_amount);
 		info!("ICP s_chain_amount: {:?}", &icp_amount);
 		info!("ICP hub_amount: {:?}", &hub_amount);
-		info!("ICP S-E差异: {:?}", &icp_amount.parse::<u128>().unwrap_or(0) - &e_amount);
-		info!("ICP H-S差异: {:?}", &hub_amount - &icp_amount.parse::<u128>().unwrap_or(0));
+
+		let icp_amount_u128 = icp_amount.parse::<u128>().unwrap_or(0);
+		info!(
+			"ICP S-E差异: {:?}, 目前比例{:?} %",
+			&icp_amount_u128 - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(icp_amount_u128))
+				.unwrap_or_default()
+		);
+		info!(
+			"ICP H-S差异: {:?}, 目前比例{:?} %",
+			&hub_amount - &icp_amount_u128,
+			&icp_amount_u128
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(hub_amount))
+				.unwrap_or_default()
+		);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"sICP".to_string(),
@@ -211,8 +243,8 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 
-		if e_amount != 0 && icp_amount.parse::<u128>().unwrap_or(0) != 0 && hub_amount != 0 {
-			if difference_warning(e_amount, icp_amount.parse::<u128>().unwrap_or(0), hub_amount) {
+		if e_amount != 0 && icp_amount_u128 != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, icp_amount_u128, hub_amount) {
 				warn!("icp difference is greater than 1%");
 				//目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链Ton/eSui/eSolana会小于1%以及暂停
 				let _ = check_chain("osmosis-1", icp_token_id, osmosis_supply, db).await?;
@@ -335,7 +367,14 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("RICH e_chain_amount: {:?}", &e_amount);
 		info!("RICH s_chain_amount: {:?}", 0);
 		info!("RICH hub_amount: {:?}", &hub_amount);
-		info!("RICH H-E 差异: {:?}", &hub_amount - &e_amount);
+		info!(
+			"RICH H-E 差异: {:?} 目前比例{:?} %",
+			&hub_amount - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(hub_amount))
+				.unwrap_or_default()
+		);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"RUNES".to_string(),
@@ -389,7 +428,15 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		info!("{:?} e_chain_amount: {:?}", &canister, &eicp_supply);
 		info!("{:?} s_chain_amount: {:?}", &canister, 0);
 		info!("{:?} hub_amount: {:?}", &canister, &hub_amount);
-		info!("{:?} H-E 差异: {:?}", &canister, &hub_amount.saturating_sub(eicp_supply));
+		info!(
+			"{:?} H-E 差异: {:?} 目前比例{:?} %",
+			&canister,
+			&hub_amount.saturating_sub(eicp_supply),
+			&eicp_supply
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(hub_amount))
+				.unwrap_or_default()
+		);
 
 		let token_on_ledger = token_on_ledger::Model::new(
 			"RUNES".to_string(),
