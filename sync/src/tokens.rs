@@ -1,9 +1,12 @@
 use crate::entities::token_on_ledger;
 use crate::{
 	chains::*,
-	difference_btw_two_bigger_than_1_percentage, difference_warning,
-	types::{Chain, ChainState, Error as OmnityError},
-	with_canister, Mutation, Query,
+	difference_btw_two_bigger_than_1_percentage,
+	difference_warning,
+	// types::{Chain, ChainState, Error as OmnityError},
+	with_canister,
+	Mutation,
+	Query,
 };
 use anyhow::anyhow;
 use candid::{Decode, Encode, Nat, Principal};
@@ -54,11 +57,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		// )
 		// .await?;
 		let core = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://rpc-core.icecreamswap.com").await?;
-		// info!("ton ckbtc : {:?}", ton);
-		// info!("bitfinity ckbtc : {:?}", bitfinity);
-		// info!("core ckbtc : {:?}", core);
-		// info!("osmosis ckbtc : {:?}", osmosis);
-		// 可能parse出问题
+
 		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
 		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
 		let ton_supply = ton.parse::<u128>().unwrap_or_default();
@@ -103,13 +102,19 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 
 		if e_amount != 0 && ckbtc_amount_u128 != 0 && hub_amount != 0 {
-			// 可能parse出问题
 			if difference_warning(e_amount, ckbtc_amount_u128, hub_amount) {
-				warn!("ckbtc difference is greater than 1%");
-				let _ = check_chain("osmosis-1", ckbtc_token_id, osmosis_supply, db).await?;
-				let _ = check_chain("Bitfinity", ckbtc_token_id, bitfinity_supply, db).await?;
-				let _ = check_chain("Ton", ckbtc_token_id, ton_supply, db).await?;
-				let _ = check_chain("Core", ckbtc_token_id, core_supply, db).await?;
+				warn!("CKBTC差距大了！！！");
+				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大S小/S小H大 分别对应场景?
+				if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
+					warn!("ckbtc difference is greater than 1%");
+					// let _ = pause_hub().await?;
+				}
+				// // 不用S来比较是因为没有单链查询
+				// let _ = check_chain("osmosis-1", ckbtc_token_id, osmosis_supply, db).await?;
+				// let _ = check_chain("Bitfinity", ckbtc_token_id, bitfinity_supply,
+				// db).await?; let _ = check_chain("Ton", ckbtc_token_id, ton_supply,
+				// db).await?; let _ = check_chain("Core", ckbtc_token_id, core_supply,
+				// db).await?;
 			}
 		}
 		Ok(())
@@ -117,37 +122,20 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	.await
 }
 
-async fn check_chain(chain_id: &str, token_id: &str, target_chain_supply: u128, db: &DbConn) -> Result<(), Box<dyn Error>> {
+pub async fn pause_hub() -> Result<(), Box<dyn Error>> {
 	with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
-		let args = Encode!(&chain_id)?;
-		let ret = agent.query(&canister_id, "get_chain").with_arg(args).call().await?;
+		warn!("Trying to pause Omnity Hub ... ");
+		let arg: Vec<u8> = Encode!(&Vec::<u8>::new())?;
+		let ret = agent.query(&canister_id, "paused").with_arg(arg.clone()).call().await?;
+		let is_paused = Decode!(&ret, bool)?;
 
-		if let Ok(chain_meta) = Decode!(&ret, Result<Chain, OmnityError>)? {
-			info!("{:?} chain_state: {:?}", chain_meta.chain_id, chain_meta.chain_state);
-
-			if chain_meta.chain_state == ChainState::Active {
-				let chain_on_hub = Query::get_token_amount_by_id(db, token_id.to_string(), chain_id.to_string()).await?;
-				if let Some(chain_token) = chain_on_hub {
-					let huh_amount = chain_token.amount.parse::<u128>().unwrap_or(0);
-					info!("huh_amount1: {:?}", huh_amount);
-					info!("target_chain_supply1: {:?}", target_chain_supply);
-
-					if difference_btw_two_bigger_than_1_percentage(huh_amount, target_chain_supply) {
-						info!("huh_amount: {:?}", huh_amount);
-						info!("target_chain_supply: {:?}", target_chain_supply);
-						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
-						// 如错误停，可屏蔽这段先
-						// warn!("trying to pause {:?} chain ... ", chain_id);
-						// let arg: Vec<u8> = Encode!(&chain_id)?;
-						// match agent.update(&canister_id,
-						// "audit_stop_chain").with_arg(arg).call_and_wait().await { 	Ok(_ret)
-						// => { 		info!("complete to pause a chain ... {:?}", ret);
-						// 	}
-						// 	Err(e) => {
-						// 		info!("err ... {:?}", e);
-						// 	}
-						// }
-					}
+		if !is_paused {
+			match agent.update(&canister_id, "audit_stop").with_arg(arg).call_and_wait().await {
+				Ok(_ret) => {
+					info!("Complete to pause Omnity Hub ...");
+				}
+				Err(e) => {
+					info!("err to pause Omnity Hub ... {:?}", e);
 				}
 			}
 		}
@@ -186,12 +174,6 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let sui = sync_with_sui("0x1c437c7a6acc30d1e1249dbc0bc53dc6f5e1803261bd176d88dec25bc8548af3::icp::ICP").await?;
 		let base = sync_with_eth_call("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35", "https://base-pokt.nodies.app").await?;
 		let solana = sync_with_solana("79yjxQmS7NWd3a5ZDrVrVcP9xEPsT4tFCys5SUdG8VxN").await?;
-		// info!("ton icp : {:?}", ton);
-		// info!("bitfinity icp : {:?}", bitfinity);
-		// info!("ethereum icp : {:?}", ethereum);
-		// info!("osmosis icp : {:?}", osmosis);
-		// info!("sui icp : {:?}", sui);
-		// info!("base icp : {:?}", base);
 
 		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
 		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
@@ -245,18 +227,23 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		if e_amount != 0 && icp_amount_u128 != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, icp_amount_u128, hub_amount) {
-				warn!("icp difference is greater than 1%");
-				//目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链Ton/eSui/eSolana会小于1%以及暂停
-				let _ = check_chain("osmosis-1", icp_token_id, osmosis_supply, db).await?;
-				let _ = check_chain("Bitfinity", icp_token_id, bitfinity_supply, db).await?;
-				let _ = check_chain("Ethereum", icp_token_id, ethereum_supply, db).await?;
-				let _ = check_chain("Ton", icp_token_id, ton_supply, db).await?;
-				let _ = check_chain("eSui", icp_token_id, sui_supply, db).await?;
-				let _ = check_chain("Base", icp_token_id, base_supply, db).await?;
-				let _ = check_chain("eSolana", icp_token_id, solana_supply, db).await?;
+				warn!("ICP差距大了！！！");
+				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大S小/S小H大 分别对应场景?
+				if (e_amount - icp_amount_u128) as f64 / e_amount as f64 > 0.01 {
+					warn!("icp difference is greater than 1%");
+					// let _ = pause_hub().await?;
+				}
+				// //目前OSMOSIS占大头，不会低于1%，一旦这个占比小了，其它3条小链Ton/eSui/
+				// eSolana会小于1%以及暂停 let _ = check_chain("osmosis-1", icp_token_id,
+				// osmosis_supply, db).await?; let _ = check_chain("Bitfinity", icp_token_id,
+				// bitfinity_supply, db).await?; let _ = check_chain("Ethereum", icp_token_id,
+				// ethereum_supply, db).await?; let _ = check_chain("Ton", icp_token_id,
+				// ton_supply, db).await?; let _ = check_chain("eSui", icp_token_id, sui_supply,
+				// db).await?; let _ = check_chain("Base", icp_token_id, base_supply,
+				// db).await?; let _ = check_chain("eSolana", icp_token_id, solana_supply,
+				// db).await?;
 			}
 		}
-
 		Ok(())
 	})
 	.await
@@ -296,22 +283,6 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		// .await?;
 		let core = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc-core.icecreamswap.com").await?;
 		let base = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://base-pokt.nodies.app").await?;
-
-		// info!("solana Rich : {:?}", solana);
-		// info!("bob Rich : {:?}", bob);
-		// info!("rootstock Rich : {:?}", rootstock);
-		// info!("ethereum Rich : {:?}", ethereum);
-		// info!("bevm Rich : {:?}", bevm);
-		// info!("xlayer Rich : {:?}", xlayer);
-		// info!("merlin Rich : {:?}", merlin);
-		// info!("ailayer Rich : {:?}", ailayer);
-		// info!("eicp Rich : {:?}", eicp);
-		// info!("bitfinity Rich : {:?}", bitfinity);
-		// info!("bsquared Rich : {:?}", bsquared);
-		// info!("ton Rich : {:?}", ton);
-		// info!("bitlayer Rich : {:?}", bitlayer);
-		// info!("core Rich : {:?}", core);
-		// info!("base Rich : {:?}", base);
 
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
 		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
@@ -385,26 +356,31 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-
+		//现都是HUB大，然后E>H是不可以
 		if difference_btw_two_bigger_than_1_percentage(e_amount, hub_amount) {
-			warn!("Rich difference is greater than 1%");
-			// 15 chains
-			//目前eICP占大头，不会低于1%，一旦这个占比小了，Ton/eSolana/会小于1%以及暂停
-			let _ = check_chain("eICP", rich_token_id, eicp_supply, db).await?;
-			let _ = check_chain("Bitfinity", rich_token_id, bitfinity_supply, db).await?;
-			let _ = check_chain("AILayer", rich_token_id, ailayer_supply, db).await?;
-			let _ = check_chain("Bitlayer", rich_token_id, bitlayer_supply, db).await?;
-			let _ = check_chain("B² Network", rich_token_id, bsquared_supply, db).await?;
-			let _ = check_chain("bevm", rich_token_id, bevm_supply, db).await?;
-			let _ = check_chain("Bob", rich_token_id, bob_supply, db).await?;
-			let _ = check_chain("Ethereum", rich_token_id, ethereum_supply, db).await?;
-			let _ = check_chain("Ton", rich_token_id, ton_supply, db).await?;
-			let _ = check_chain("eSolana", rich_token_id, solana_supply, db).await?;
-			let _ = check_chain("RootStock", rich_token_id, rootstock_supply, db).await?;
-			let _ = check_chain("X Layer", rich_token_id, xlayer_supply, db).await?;
-			let _ = check_chain("Merlin", rich_token_id, merlin_supply, db).await?;
-			let _ = check_chain("Core", rich_token_id, core_supply, db).await?;
-			let _ = check_chain("Base", rich_token_id, base_supply, db).await?;
+			warn!("Rich差距大了！！");
+			if (e_amount - hub_amount) as f64 / e_amount as f64 > 0.01 {
+				warn!("Rich difference is greater than 1%");
+				// let _ = pause_hub().await?;
+			}
+
+			// // 15 chains
+			// //目前eICP占大头，不会低于1%，一旦这个占比小了，Ton/eSolana/会小于1%以及暂停
+			// let _ = check_chain("eICP", rich_token_id, eicp_supply, db).await?;
+			// let _ = check_chain("Bitfinity", rich_token_id, bitfinity_supply, db).await?;
+			// let _ = check_chain("AILayer", rich_token_id, ailayer_supply, db).await?;
+			// let _ = check_chain("Bitlayer", rich_token_id, bitlayer_supply, db).await?;
+			// let _ = check_chain("B² Network", rich_token_id, bsquared_supply, db).await?;
+			// let _ = check_chain("bevm", rich_token_id, bevm_supply, db).await?;
+			// let _ = check_chain("Bob", rich_token_id, bob_supply, db).await?;
+			// let _ = check_chain("Ethereum", rich_token_id, ethereum_supply, db).await?;
+			// let _ = check_chain("Ton", rich_token_id, ton_supply, db).await?;
+			// let _ = check_chain("eSolana", rich_token_id, solana_supply, db).await?;
+			// let _ = check_chain("RootStock", rich_token_id, rootstock_supply, db).await?;
+			// let _ = check_chain("X Layer", rich_token_id, xlayer_supply, db).await?;
+			// let _ = check_chain("Merlin", rich_token_id, merlin_supply, db).await?;
+			// let _ = check_chain("Core", rich_token_id, core_supply, db).await?;
+			// let _ = check_chain("Base", rich_token_id, base_supply, db).await?;
 		}
 		Ok(())
 	})
@@ -448,13 +424,55 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 		if difference_btw_two_bigger_than_1_percentage(eicp_supply, hub_amount) {
-			warn!("{:?} is greater than 1%", canister);
-			let _ = check_chain("eICP", token, eicp_supply, db).await?;
+			warn!("{:?} 差距大了！！", canister);
+			//现都是HUB大，然后E>H是不可以
+			if (eicp_supply - hub_amount) as f64 / eicp_supply as f64 > 0.01 {
+				warn!("{:?} is greater than 1%", canister);
+				// let _ = pause_hub().await?;
+			}
+			// let _ = check_chain("eICP", token, eicp_supply, db).await?;
 		}
 		Ok(())
 	})
 	.await
 }
+
+// async fn check_chain(chain_id: &str, token_id: &str, target_chain_supply: u128, db: &DbConn) ->
+// Result<(), Box<dyn Error>> { 	with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async
+// move { 		let args = Encode!(&chain_id)?;
+// 		let ret = agent.query(&canister_id, "get_chain").with_arg(args).call().await?;
+// 		if let Ok(chain_meta) = Decode!(&ret, Result<Chain, OmnityError>)? {
+// 			info!("{:?} chain_state: {:?}", chain_meta.chain_id, chain_meta.chain_state);
+// 			if chain_meta.chain_state == ChainState::Active {
+// 				let chain_on_hub = Query::get_token_amount_by_id(db, token_id.to_string(),
+// chain_id.to_string()).await?; 				if let Some(chain_token) = chain_on_hub {
+// 					let huh_amount = chain_token.amount.parse::<u128>().unwrap_or(0);
+// 					info!("huh_amount1: {:?}", huh_amount);
+// 					info!("target_chain_supply1: {:?}", target_chain_supply);
+
+// 					if difference_btw_two_bigger_than_1_percentage(huh_amount, target_chain_supply) {
+// 						info!("huh_amount: {:?}", huh_amount);
+// 						info!("target_chain_supply: {:?}", target_chain_supply);
+// 						warn!("{:?} difference from {:?} is greater than 1%", token_id, chain_id);
+// 						// 如错误停，可屏蔽这段先
+// 						warn!("Trying to pause Omnity Hub ... ");
+// 						let arg: Vec<u8> = Encode!(&Vec::<u8>::new())?;
+// 						match agent.update(&canister_id, "audit_stop").with_arg(arg).call_and_wait().await {
+// 							Ok(_ret) => {
+// 								info!("complete to pause a chain ... {:?}", ret);
+// 							}
+// 							Err(e) => {
+// 								info!("err ... {:?}", e);
+// 							}
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+// 		Ok(())
+// 	})
+// 	.await
+// }
 
 // pub async fn sync_cketh(db: &DbConn) -> Result<(), Box<dyn Error>> {
 // 	with_canister("CKETH_CANISTER_ID", |agent, canister_id| async move {
