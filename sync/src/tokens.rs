@@ -1,11 +1,15 @@
 use crate::entities::token_on_ledger;
-use crate::{chains::*, difference_btw_two_bigger_than_1_percentage, difference_warning, with_canister, Mutation, Query};
+use crate::{
+	chains::*, difference_btw_two_bigger_than_1_percentage, difference_warning, with_canister, Error as OmnityError, Mutation,
+	OmnityTokenOnChain, Query,
+};
 use anyhow::anyhow;
 use candid::{Decode, Encode, Nat, Principal};
 use icrc_ledger_types::icrc1::account::Account;
 use log::{info, warn};
 use sea_orm::DbConn;
-use std::error::Error;
+use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 
 pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("CKBTC_CANISTER_ID", |agent, canister_id| async move {
@@ -91,7 +95,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		if e_amount != 0 && ckbtc_amount_u128 != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, ckbtc_amount_u128, hub_amount) {
 				warn!("CKBTC差距大了！！！");
-				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大S小/S小H大 分别对应场景?
+				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
 				if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
 					warn!("ckbtc difference is greater than 1%");
 					// let _ = pause_hub().await?;
@@ -339,10 +343,26 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
 
-		let mut hub_amount = 0;
-		if let Some(chain_token) = Query::get_token_amount_by_id(db, token.to_string(), "eICP".to_string()).await? {
-			hub_amount = chain_token.amount.parse::<u128>().unwrap_or(0)
-		}
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let amount_clone = hub_amount1.clone();
+
+		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+			let tokens_on_chains_args = Encode!(&"eICP".to_string(), &token.to_string(), &0u64, &10_u64)?;
+			let return_output = agent
+				.query(&canister_id, "get_chain_tokens")
+				.with_arg(tokens_on_chains_args)
+				.call()
+				.await?;
+
+			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+				if !tokens_on_chains.is_empty() {
+					*amount_clone.lock().await = tokens_on_chains[0].amount;
+				}
+			}
+			Ok(())
+		})
+		.await?;
+		let hub_amount = *hub_amount1.lock().await;
 
 		info!("{:?} e_chain_amount: {:?}", &canister, &eicp_supply);
 		info!("{:?} s_chain_amount: {:?}", &canister, 0);
