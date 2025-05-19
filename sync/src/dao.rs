@@ -48,8 +48,9 @@ impl Mutation {
 				// info!("insert token on chain result : {:?}", ret);
 			}
 			Err(_) => {
-				let model = Self::update_token_on_chain(db, token_on_chain.clone(), token_on_chain.clone().amount).await?;
-				info!("the token on chain {:?}", model);
+				// let model = Self::update_token_on_chain(db, token_on_chain.clone(),
+				// token_on_chain.clone().amount).await?; info!("the token on chain {:?}",
+				// model);
 			}
 		}
 		Ok(token_on_chain::Model { ..token_on_chain })
