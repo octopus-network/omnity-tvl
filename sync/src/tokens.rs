@@ -2,8 +2,10 @@ use crate::entities::token_on_ledger;
 use crate::{
 	chains::*,
 	difference_warning,
-	types::{ChainId, OmnityTokenOnChain},
-	with_canister, Error as OmnityError, Mutation,
+	// types::{ChainId, OmnityTokenOnChain}, Error as OmnityError,
+	with_canister,
+	Mutation,
+	Query,
 };
 use anyhow::anyhow;
 use candid::{Decode, Encode, Nat, Principal};
@@ -28,51 +30,51 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let mut hub_amount = 0;
 		let mut count = 0;
-		// while hub_amount == 0 {
-		// 	while count != 5 {
-		// 		if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
-		// 			count = ckbtc_amounts.len();
-		// 			if ckbtc_amounts.len() == 5 {
-		// 				for tamount in &ckbtc_amounts {
-		// 					if let Ok(amt) = tamount.amount.parse::<u128>() {
-		// 						hub_amount += amt;
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// 	break;
-		// }
-		let hub_amount1 = Arc::new(Mutex::new(0u128));
-		let count1 = Arc::new(Mutex::new(0usize));
 		while hub_amount == 0 {
 			while count != 5 {
-				let amount_clone = hub_amount1.clone();
-				let count_clone = count1.clone();
-				let _ = with_canister("OMNITY_HUB_CANISTER_ID", |hub_agent, hub_canister_id| async move {
-					let tokens_on_chains_args = Encode!(&None::<ChainId>, &ckbtc_token_id.to_string(), &0u64, &100_u64)?;
-					let return_output = hub_agent
-						.query(&hub_canister_id, "get_chain_tokens")
-						.with_arg(tokens_on_chains_args)
-						.call()
-						.await?;
-
-					if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
-						if !tokens_on_chains.is_empty() {
-							*count_clone.lock().await = tokens_on_chains.len();
-							for tamount in tokens_on_chains {
-								*amount_clone.lock().await += tamount.amount
+				if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
+					count = ckbtc_amounts.len();
+					if ckbtc_amounts.len() == 5 {
+						for tamount in &ckbtc_amounts {
+							if let Ok(amt) = tamount.amount.parse::<u128>() {
+								hub_amount += amt;
 							}
 						}
 					}
-					Ok(())
-				})
-				.await?;
-				count = *count1.lock().await;
+				}
 			}
 			break;
 		}
-		hub_amount = *hub_amount1.lock().await;
+		// let hub_amount1 = Arc::new(Mutex::new(0u128));
+		// let count1 = Arc::new(Mutex::new(0usize));
+		// while hub_amount == 0 {
+		// 	while count != 5 {
+		// 		let amount_clone = hub_amount1.clone();
+		// 		let count_clone = count1.clone();
+		// 		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |hub_agent, hub_canister_id| async move {
+		// 			let tokens_on_chains_args = Encode!(&None::<ChainId>, &ckbtc_token_id.to_string(), &0u64,
+		// &100_u64)?; 			let return_output = hub_agent
+		// 				.query(&hub_canister_id, "get_chain_tokens")
+		// 				.with_arg(tokens_on_chains_args)
+		// 				.call()
+		// 				.await?;
+
+		// 			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>,
+		// OmnityError>)? { 				if !tokens_on_chains.is_empty() {
+		// 					*count_clone.lock().await = tokens_on_chains.len();
+		// 					for tamount in tokens_on_chains {
+		// 						*amount_clone.lock().await += tamount.amount
+		// 					}
+		// 				}
+		// 			}
+		// 			Ok(())
+		// 		})
+		// 		.await?;
+		// 		count = *count1.lock().await;
+		// 	}
+		// 	break;
+		// }
+		// hub_amount = *hub_amount1.lock().await;
 
 		let osmosis =
 			sync_with_osmosis("factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC").await?;
@@ -174,31 +176,31 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let ret = agent.query(&canister_id, "icrc1_balance_of").with_arg(arg).call().await?;
 		let icp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
-		// let mut hub_amount = 0;
-		// for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
-		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		// }
-		let hub_amount1 = Arc::new(Mutex::new(0u128));
-		let amount_clone = hub_amount1.clone();
-		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
-			let tokens_on_chains_args = Encode!(&None::<ChainId>, &icp_token_id.to_string(), &0u64, &100_u64)?;
-			let return_output = agent
-				.query(&canister_id, "get_chain_tokens")
-				.with_arg(tokens_on_chains_args)
-				.call()
-				.await?;
+		let mut hub_amount = 0;
+		for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
+			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		}
+		// let hub_amount1 = Arc::new(Mutex::new(0u128));
+		// let amount_clone = hub_amount1.clone();
+		// let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+		// 	let tokens_on_chains_args = Encode!(&None::<ChainId>, &icp_token_id.to_string(), &0u64,
+		// &100_u64)?; 	let return_output = agent
+		// 		.query(&canister_id, "get_chain_tokens")
+		// 		.with_arg(tokens_on_chains_args)
+		// 		.call()
+		// 		.await?;
 
-			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
-				if !tokens_on_chains.is_empty() {
-					for tamount in tokens_on_chains {
-						*amount_clone.lock().await += tamount.amount
-					}
-				}
-			}
-			Ok(())
-		})
-		.await?;
-		let hub_amount = *hub_amount1.lock().await;
+		// 	if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>,
+		// OmnityError>)? { 		if !tokens_on_chains.is_empty() {
+		// 			for tamount in tokens_on_chains {
+		// 				*amount_clone.lock().await += tamount.amount
+		// 			}
+		// 		}
+		// 	}
+		// 	Ok(())
+		// })
+		// .await?;
+		// let hub_amount = *hub_amount1.lock().await;
 
 		let osmosis = sync_with_osmosis("factory/osmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm/sICP-native-ICP").await?;
 		let bitfinity = sync_with_bitfinity("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6").await?;
@@ -350,31 +352,31 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				+ core_supply
 				+ base_supply;
 
-		// let mut hub_amount = 0;
-		// for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
-		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		// }
-		let hub_amount1 = Arc::new(Mutex::new(0u128));
-		let amount_clone = hub_amount1.clone();
-		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
-			let tokens_on_chains_args = Encode!(&None::<ChainId>, &rich_token_id.to_string(), &0u64, &100_u64)?;
-			let return_output = agent
-				.query(&canister_id, "get_chain_tokens")
-				.with_arg(tokens_on_chains_args)
-				.call()
-				.await?;
+		let mut hub_amount = 0;
+		for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
+			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		}
+		// let hub_amount1 = Arc::new(Mutex::new(0u128));
+		// let amount_clone = hub_amount1.clone();
+		// let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+		// 	let tokens_on_chains_args = Encode!(&None::<ChainId>, &rich_token_id.to_string(), &0u64,
+		// &100_u64)?; 	let return_output = agent
+		// 		.query(&canister_id, "get_chain_tokens")
+		// 		.with_arg(tokens_on_chains_args)
+		// 		.call()
+		// 		.await?;
 
-			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
-				if !tokens_on_chains.is_empty() {
-					for tamount in tokens_on_chains {
-						*amount_clone.lock().await += tamount.amount
-					}
-				}
-			}
-			Ok(())
-		})
-		.await?;
-		let hub_amount = *hub_amount1.lock().await;
+		// 	if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>,
+		// OmnityError>)? { 		if !tokens_on_chains.is_empty() {
+		// 			for tamount in tokens_on_chains {
+		// 				*amount_clone.lock().await += tamount.amount
+		// 			}
+		// 		}
+		// 	}
+		// 	Ok(())
+		// })
+		// .await?;
+		// let hub_amount = *hub_amount1.lock().await;
 
 		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
 		let s_chain_amount_clone = s_chain_amount1.clone();
@@ -458,25 +460,30 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
 
-		let hub_amount1 = Arc::new(Mutex::new(0u128));
-		let amount_clone = hub_amount1.clone();
-		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
-			let tokens_on_chains_args = Encode!(&"eICP".to_string(), &token.to_string(), &0u64, &10_u64)?;
-			let return_output = agent
-				.query(&canister_id, "get_chain_tokens")
-				.with_arg(tokens_on_chains_args)
-				.call()
-				.await?;
+		let mut hub_amount = 0;
+		if let Some(chain_token) = Query::get_token_amount_by_id(db, token.to_string(), "eICP".to_string()).await? {
+			hub_amount = chain_token.amount.parse::<u128>().unwrap_or(0)
+		}
 
-			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
-				if !tokens_on_chains.is_empty() {
-					*amount_clone.lock().await = tokens_on_chains[0].amount;
-				}
-			}
-			Ok(())
-		})
-		.await?;
-		let hub_amount = *hub_amount1.lock().await;
+		// let hub_amount1 = Arc::new(Mutex::new(0u128));
+		// let amount_clone = hub_amount1.clone();
+		// let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+		// 	let tokens_on_chains_args = Encode!(&"eICP".to_string(), &token.to_string(), &0u64, &10_u64)?;
+		// 	let return_output = agent
+		// 		.query(&canister_id, "get_chain_tokens")
+		// 		.with_arg(tokens_on_chains_args)
+		// 		.call()
+		// 		.await?;
+
+		// 	if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>,
+		// OmnityError>)? { 		if !tokens_on_chains.is_empty() {
+		// 			*amount_clone.lock().await = tokens_on_chains[0].amount;
+		// 		}
+		// 	}
+		// 	Ok(())
+		// })
+		// .await?;
+		// let hub_amount = *hub_amount1.lock().await;
 
 		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
 		let s_chain_amount_clone = s_chain_amount1.clone();

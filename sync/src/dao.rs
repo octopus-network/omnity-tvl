@@ -12,11 +12,7 @@ impl Query {
 			.all(db)
 			.await
 	}
-	pub async fn get_token_amount_by_id(
-		db: &DbConn,
-		token_id: String,
-		chain_id: String,
-	) -> Result<Option<token_on_chain::Model>, DbErr> {
+	pub async fn get_token_amount_by_id(db: &DbConn, token_id: String, chain_id: String) -> Result<Option<token_on_chain::Model>, DbErr> {
 		TokenOnChain::find_by_id((chain_id, token_id)).one(db).await
 	}
 }
@@ -40,47 +36,29 @@ impl Delete {
 
 pub struct Mutation;
 impl Mutation {
-	pub async fn save_token_on_chain(
-		db: &DbConn,
-		token_on_chain: token_on_chain::Model,
-	) -> Result<token_on_chain::Model, DbErr> {
+	pub async fn save_token_on_chain(db: &DbConn, token_on_chain: token_on_chain::Model) -> Result<token_on_chain::Model, DbErr> {
 		let active_model: token_on_chain::ActiveModel = token_on_chain.clone().into();
 		let on_conflict = OnConflict::columns([token_on_chain::Column::ChainId, token_on_chain::Column::TokenId])
 			.do_nothing()
 			.to_owned();
-		let insert_result = TokenOnChain::insert(active_model.clone())
-			.on_conflict(on_conflict)
-			.exec(db)
-			.await;
+		let insert_result = TokenOnChain::insert(active_model.clone()).on_conflict(on_conflict).exec(db).await;
 
 		match insert_result {
 			Ok(_ret) => {
 				// info!("insert token on chain result : {:?}", ret);
 			}
 			Err(_) => {
-				let _model =
-					Self::update_token_on_chain(db, token_on_chain.clone(), token_on_chain.clone().amount).await?;
-				// info!(
-				// 	"the token on chain already exists, updated it ! {:?}",
-				// 	model
-				// );
+				let model = Self::update_token_on_chain(db, token_on_chain.clone(), token_on_chain.clone().amount).await?;
+				info!("the token on chain {:?}", model);
 			}
 		}
 		Ok(token_on_chain::Model { ..token_on_chain })
 	}
 
-	pub async fn save_token_on_ledger(
-		db: &DbConn,
-		token_on_ledger: token_on_ledger::Model,
-	) -> Result<token_on_ledger::Model, DbErr> {
+	pub async fn save_token_on_ledger(db: &DbConn, token_on_ledger: token_on_ledger::Model) -> Result<token_on_ledger::Model, DbErr> {
 		let active_model: token_on_ledger::ActiveModel = token_on_ledger.clone().into();
-		let on_conflict = OnConflict::column(token_on_ledger::Column::TokenId)
-			.do_nothing()
-			.to_owned();
-		let insert_result = TokenOnLedger::insert(active_model.clone())
-			.on_conflict(on_conflict)
-			.exec(db)
-			.await;
+		let on_conflict = OnConflict::column(token_on_ledger::Column::TokenId).do_nothing().to_owned();
+		let insert_result = TokenOnLedger::insert(active_model.clone()).on_conflict(on_conflict).exec(db).await;
 
 		match insert_result {
 			Ok(ret) => {
