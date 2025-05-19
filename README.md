@@ -34,6 +34,7 @@ export CKUSDT_CANISTER_ID=cngnf-vqaaa-aaaar-qag4q-cai
 export NEURON_CANISTER_ID=buwm7-7yaaa-aaaar-qagva-cai
 export DRAGGIN_CANISTER_ID=zfcdd-tqaaa-aaaaq-aaaga-cai
 export ICP_CANISTER_ID=ryjl3-tyaaa-aaaaa-aaaba-cai
+export OMNITY_CUSTOMS_BITCOIN_CANISTER_ID=7rvjr-3qaaa-aaaar-qaeyq-cai
 
 export ODINAPE_ID_BVAE_ODIN=26jmx-laaaa-aaaar-qaqqq-cai
 export ODINDOG_ID_YTTL_ODIN=eazb6-tqaaa-aaaar-qan2a-cai

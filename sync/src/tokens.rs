@@ -1,7 +1,9 @@
 use crate::entities::token_on_ledger;
 use crate::{
-	chains::*, difference_btw_two_bigger_than_1_percentage, difference_warning, with_canister, Error as OmnityError, Mutation,
-	OmnityTokenOnChain, Query,
+	chains::*,
+	difference_warning,
+	types::{ChainId, OmnityTokenOnChain},
+	with_canister, Error as OmnityError, Mutation,
 };
 use anyhow::anyhow;
 use candid::{Decode, Encode, Nat, Principal};
@@ -26,22 +28,51 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let mut hub_amount = 0;
 		let mut count = 0;
-
+		// while hub_amount == 0 {
+		// 	while count != 5 {
+		// 		if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
+		// 			count = ckbtc_amounts.len();
+		// 			if ckbtc_amounts.len() == 5 {
+		// 				for tamount in &ckbtc_amounts {
+		// 					if let Ok(amt) = tamount.amount.parse::<u128>() {
+		// 						hub_amount += amt;
+		// 					}
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// 	break;
+		// }
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let count1 = Arc::new(Mutex::new(0usize));
 		while hub_amount == 0 {
 			while count != 5 {
-				if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
-					count = ckbtc_amounts.len();
-					if ckbtc_amounts.len() == 5 {
-						for tamount in &ckbtc_amounts {
-							if let Ok(amt) = tamount.amount.parse::<u128>() {
-								hub_amount += amt;
+				let amount_clone = hub_amount1.clone();
+				let count_clone = count1.clone();
+				let _ = with_canister("OMNITY_HUB_CANISTER_ID", |hub_agent, hub_canister_id| async move {
+					let tokens_on_chains_args = Encode!(&None::<ChainId>, &ckbtc_token_id.to_string(), &0u64, &100_u64)?;
+					let return_output = hub_agent
+						.query(&hub_canister_id, "get_chain_tokens")
+						.with_arg(tokens_on_chains_args)
+						.call()
+						.await?;
+
+					if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+						if !tokens_on_chains.is_empty() {
+							*count_clone.lock().await = tokens_on_chains.len();
+							for tamount in tokens_on_chains {
+								*amount_clone.lock().await += tamount.amount
 							}
 						}
 					}
-				}
+					Ok(())
+				})
+				.await?;
+				count = *count1.lock().await;
 			}
 			break;
 		}
+		hub_amount = *hub_amount1.lock().await;
 
 		let osmosis =
 			sync_with_osmosis("factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC").await?;
@@ -91,14 +122,15 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		// 不用S来比较是因为没有单链查询
 		if e_amount != 0 && ckbtc_amount_u128 != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, ckbtc_amount_u128, hub_amount) {
 				warn!("CKBTC差距大了！！！");
 				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
-				if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
-					warn!("ckbtc difference is greater than 1%");
-					// let _ = pause_hub().await?;
+				if e_amount > ckbtc_amount_u128 {
+					if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
+						warn!("ckbtc difference is greater than 1%");
+						// let _ = pause_hub().await?;
+					}
 				}
 			}
 		}
@@ -142,10 +174,31 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let ret = agent.query(&canister_id, "icrc1_balance_of").with_arg(arg).call().await?;
 		let icp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
+		// let mut hub_amount = 0;
+		// for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
+		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		// }
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let amount_clone = hub_amount1.clone();
+		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+			let tokens_on_chains_args = Encode!(&None::<ChainId>, &icp_token_id.to_string(), &0u64, &100_u64)?;
+			let return_output = agent
+				.query(&canister_id, "get_chain_tokens")
+				.with_arg(tokens_on_chains_args)
+				.call()
+				.await?;
+
+			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+				if !tokens_on_chains.is_empty() {
+					for tamount in tokens_on_chains {
+						*amount_clone.lock().await += tamount.amount
+					}
+				}
+			}
+			Ok(())
+		})
+		.await?;
+		let hub_amount = *hub_amount1.lock().await;
 
 		let osmosis = sync_with_osmosis("factory/osmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm/sICP-native-ICP").await?;
 		let bitfinity = sync_with_bitfinity("0x51cCdE9Ca75d95BB55eCe1775fCBFF91324B18A6").await?;
@@ -209,9 +262,11 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			if difference_warning(e_amount, icp_amount_u128, hub_amount) {
 				warn!("ICP差距大了！！！");
 				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大S小/S小H大 分别对应场景?
-				if (e_amount - icp_amount_u128) as f64 / e_amount as f64 > 0.01 {
-					warn!("icp difference is greater than 1%");
-					// let _ = pause_hub().await?;
+				if e_amount > icp_amount_u128 {
+					if (e_amount - icp_amount_u128) as f64 / e_amount as f64 > 0.01 {
+						warn!("icp difference is greater than 1%");
+						// let _ = pause_hub().await?;
+					}
 				}
 			}
 		}
@@ -295,14 +350,69 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				+ core_supply
 				+ base_supply;
 
-		let mut hub_amount = 0;
-		for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
-			hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		}
+		// let mut hub_amount = 0;
+		// for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
+		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
+		// }
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let amount_clone = hub_amount1.clone();
+		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+			let tokens_on_chains_args = Encode!(&None::<ChainId>, &rich_token_id.to_string(), &0u64, &100_u64)?;
+			let return_output = agent
+				.query(&canister_id, "get_chain_tokens")
+				.with_arg(tokens_on_chains_args)
+				.call()
+				.await?;
+
+			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+				if !tokens_on_chains.is_empty() {
+					for tamount in tokens_on_chains {
+						*amount_clone.lock().await += tamount.amount
+					}
+				}
+			}
+			Ok(())
+		})
+		.await?;
+		let hub_amount = *hub_amount1.lock().await;
+
+		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
+		let s_chain_amount_clone = s_chain_amount1.clone();
+		let _ = with_canister("OMNITY_CUSTOMS_BITCOIN_CANISTER_ID", |agent, canister_id| async move {
+			let rune_token_lock_args = Encode!(&rich_token_id.to_string())?;
+			let token_lock_return_output = agent
+				.query(&canister_id, "token_lock_amount")
+				.with_arg(rune_token_lock_args)
+				.call()
+				.await?;
+
+			let rune_amount = Decode!(&token_lock_return_output, u128)?;
+			*s_chain_amount_clone.lock().await = rune_amount;
+
+			Ok(())
+		})
+		.await?;
+		let s_chain_amount = *s_chain_amount1.lock().await;
 
 		info!("RICH e_chain_amount: {:?}", &e_amount);
-		info!("RICH s_chain_amount: {:?}", 0);
+		info!("RICH s_chain_amount: {:?}", &s_chain_amount);
 		info!("RICH hub_amount: {:?}", &hub_amount);
+		// info!(
+		// 	"RICH S-E差异: {:?}, 目前比例{:?} %",
+		// 	&s_chain_amount - &e_amount,
+		// 	&e_amount
+		// 		.checked_mul(100)
+		// 		.and_then(|n| n.checked_div(s_chain_amount))
+		// 		.unwrap_or_default()
+		// );
+		info!(
+			"RICH E-S差异: {:?}, 目前比例{:?} %",
+			&e_amount - &s_chain_amount,
+			&s_chain_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(e_amount))
+				.unwrap_or_default()
+		);
 		info!(
 			"RICH H-E 差异: {:?} 目前比例{:?} %",
 			&hub_amount - &e_amount,
@@ -317,16 +427,21 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			"HOPE•YOU•GET•RICH".to_string(),
 			2_i16,
 			e_amount.to_string(),
-			"0".to_string(),
+			s_chain_amount.to_string(),
 			hub_amount.to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		//现都是HUB大，然后E>H是不可以
-		if difference_btw_two_bigger_than_1_percentage(e_amount, hub_amount) {
-			warn!("Rich差距大了！！");
-			if (e_amount - hub_amount) as f64 / e_amount as f64 > 0.01 {
-				warn!("Rich difference is greater than 1%");
-				// let _ = pause_hub().await?;
+		if e_amount != 0 && s_chain_amount != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, s_chain_amount, hub_amount) {
+				warn!("RICH 差距大了！！！");
+				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
+				// 目前E>S，但只有0.22%
+				if e_amount > s_chain_amount {
+					if (e_amount - s_chain_amount) as f64 / e_amount as f64 > 0.01 {
+						warn!("RICH difference is greater than 1%");
+						// let _ = pause_hub().await?;
+					}
+				}
 			}
 		}
 		Ok(())
@@ -345,7 +460,6 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 
 		let hub_amount1 = Arc::new(Mutex::new(0u128));
 		let amount_clone = hub_amount1.clone();
-
 		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
 			let tokens_on_chains_args = Encode!(&"eICP".to_string(), &token.to_string(), &0u64, &10_u64)?;
 			let return_output = agent
@@ -364,9 +478,36 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		.await?;
 		let hub_amount = *hub_amount1.lock().await;
 
+		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
+		let s_chain_amount_clone = s_chain_amount1.clone();
+		let _ = with_canister("OMNITY_CUSTOMS_BITCOIN_CANISTER_ID", |agent, canister_id| async move {
+			let rune_token_lock_args = Encode!(&token.to_string())?;
+			let token_lock_return_output = agent
+				.query(&canister_id, "token_lock_amount")
+				.with_arg(rune_token_lock_args)
+				.call()
+				.await?;
+
+			let rune_amount = Decode!(&token_lock_return_output, u128)?;
+			*s_chain_amount_clone.lock().await = rune_amount;
+
+			Ok(())
+		})
+		.await?;
+		let s_chain_amount = *s_chain_amount1.lock().await;
+
 		info!("{:?} e_chain_amount: {:?}", &canister, &eicp_supply);
-		info!("{:?} s_chain_amount: {:?}", &canister, 0);
+		info!("{:?} s_chain_amount: {:?}", &canister, &s_chain_amount);
 		info!("{:?} hub_amount: {:?}", &canister, &hub_amount);
+		info!(
+			"{:?} S-E差异: {:?}, 目前比例{:?} %",
+			&canister,
+			&s_chain_amount - &eicp_supply,
+			&eicp_supply
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(s_chain_amount))
+				.unwrap_or_default()
+		);
 		info!(
 			"{:?} H-E 差异: {:?} 目前比例{:?} %",
 			&canister,
@@ -382,17 +523,20 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 			token.to_string(),
 			decimal,
 			eicp_supply.to_string(),
-			"0".to_string(),
+			s_chain_amount.to_string(),
 			hub_amount.clone().to_string(),
 		);
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
-		if difference_btw_two_bigger_than_1_percentage(eicp_supply, hub_amount) {
-			warn!("{:?} 差距大了！！", canister);
-			if eicp_supply > hub_amount {
-				//现都是HUB大，然后E>H是不可以
-				if (eicp_supply - hub_amount) as f64 / eicp_supply as f64 > 0.01 {
-					warn!("{:?} is greater than 1%", canister);
-					// let _ = pause_hub().await?;
+		if eicp_supply != 0 && s_chain_amount != 0 && hub_amount != 0 {
+			if difference_warning(eicp_supply, s_chain_amount, hub_amount) {
+				warn!("{:?}差距大了！！！", &canister);
+				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
+				// ODINDOG_ID_YTTL_ODIN小0.01%/BITCAT_ID_EOSE_ODIN小0.001%/GHOSTNODE_ID_ZVVO_ODIN
+				if eicp_supply > s_chain_amount {
+					if (eicp_supply - s_chain_amount) as f64 / eicp_supply as f64 > 0.01 {
+						warn!("{:?} difference is greater than 1%", &canister);
+						// let _ = pause_hub().await?;
+					}
 				}
 			}
 		}
