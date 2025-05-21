@@ -97,7 +97,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let ckbtc_amount_u128 = ckbtc_amount.parse::<u128>().unwrap_or(0);
 		info!(
-			"ckBTC S-E差异: {:?}, 目前比例{:?} %",
+			"ckBTC S-E 差异: {:?}, 目前比例 {:?} %",
 			&ckbtc_amount_u128 - &e_amount,
 			&e_amount
 				.checked_mul(100)
@@ -105,7 +105,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				.unwrap_or_default()
 		);
 		info!(
-			"ckBTC S-H差异: {:?}, 目前比例{:?} %",
+			"ckBTC S-H 差异: {:?}, 目前比例 {:?} %",
 			&ckbtc_amount_u128 - &hub_amount,
 			&hub_amount
 				.checked_mul(100)
@@ -124,7 +124,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 		if e_amount != 0 && ckbtc_amount_u128 != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, ckbtc_amount_u128, hub_amount) {
-				warn!("CKBTC差距大了！！！");
+				warn!("CKBTC 差距大了 ！！！");
 				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
 				if e_amount > ckbtc_amount_u128 {
 					if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
@@ -232,7 +232,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let icp_amount_u128 = icp_amount.parse::<u128>().unwrap_or(0);
 		info!(
-			"ICP S-E差异: {:?}, 目前比例{:?} %",
+			"ICP S-E 差异: {:?}, 目前比例 {:?} %",
 			&icp_amount_u128 - &e_amount,
 			&e_amount
 				.checked_mul(100)
@@ -240,7 +240,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				.unwrap_or_default()
 		);
 		info!(
-			"ICP H-S差异: {:?}, 目前比例{:?} %",
+			"ICP H-S 差异: {:?}, 目前比例 {:?} %",
 			&hub_amount - &icp_amount_u128,
 			&icp_amount_u128
 				.checked_mul(100)
@@ -260,7 +260,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		if e_amount != 0 && icp_amount_u128 != 0 && hub_amount != 0 {
 			if difference_warning(e_amount, icp_amount_u128, hub_amount) {
-				warn!("ICP差距大了！！！");
+				warn!("ICP 差距大了 ！！！");
 				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大S小/S小H大 分别对应场景?
 				if e_amount > icp_amount_u128 {
 					if (e_amount - icp_amount_u128) as f64 / e_amount as f64 > 0.01 {
@@ -398,7 +398,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("RICH s_chain_amount: {:?}", &s_chain_amount);
 		info!("RICH hub_amount: {:?}", &hub_amount);
 		// info!(
-		// 	"RICH S-E差异: {:?}, 目前比例{:?} %",
+		// 	"RICH S-E 差异: {:?}, 目前比例 {:?} %",
 		// 	&s_chain_amount - &e_amount,
 		// 	&e_amount
 		// 		.checked_mul(100)
@@ -406,7 +406,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		// 		.unwrap_or_default()
 		// );
 		info!(
-			"RICH E-S差异: {:?}, 目前比例{:?} %",
+			"RICH E-S 差异: {:?}, 目前比例 {:?} %",
 			&e_amount - &s_chain_amount,
 			&s_chain_amount
 				.checked_mul(100)
@@ -414,7 +414,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				.unwrap_or_default()
 		);
 		info!(
-			"RICH H-E 差异: {:?} 目前比例{:?} %",
+			"RICH H-E 差异: {:?} 目前比例 {:?} %",
 			&hub_amount - &e_amount,
 			&e_amount
 				.checked_mul(100)
@@ -505,7 +505,7 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		info!("{:?} s_chain_amount: {:?}", &canister, &s_chain_amount);
 		info!("{:?} hub_amount: {:?}", &canister, &hub_amount);
 		info!(
-			"{:?} S-E差异: {:?}, 目前比例{:?} %",
+			"{:?} S-E 差异: {:?}, 目前比例 {:?} %",
 			&canister,
 			&s_chain_amount - &eicp_supply,
 			&eicp_supply
@@ -514,7 +514,7 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 				.unwrap_or_default()
 		);
 		info!(
-			"{:?} H-E 差异: {:?} 目前比例{:?} %",
+			"{:?} H-E 差异: {:?} 目前比例 {:?} %",
 			&canister,
 			&hub_amount.saturating_sub(eicp_supply),
 			&eicp_supply
@@ -534,7 +534,7 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
 		if eicp_supply != 0 && s_chain_amount != 0 && hub_amount != 0 {
 			if difference_warning(eicp_supply, s_chain_amount, hub_amount) {
-				warn!("{:?}差距大了！！！", &canister);
+				warn!("{:?} 差距大了 ！！！", &canister);
 				// e>s 确认不好, e<s 确认可以，H大S小/S小H大/H大E小/S小E大 分别对应场景?
 				// ODINDOG_ID_YTTL_ODIN小0.01%/BITCAT_ID_EOSE_ODIN小0.001%/GHOSTNODE_ID_ZVVO_ODIN
 				if eicp_supply > s_chain_amount {
