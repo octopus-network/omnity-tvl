@@ -129,7 +129,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				if e_amount > ckbtc_amount_u128 {
 					if (e_amount - ckbtc_amount_u128) as f64 / e_amount as f64 > 0.01 {
 						warn!("ckbtc difference is greater than 1%");
-						let _ = pause_hub().await?;
+						// let _ = pause_hub().await?;
 					}
 				}
 			}
@@ -265,7 +265,7 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				if e_amount > icp_amount_u128 {
 					if (e_amount - icp_amount_u128) as f64 / e_amount as f64 > 0.01 {
 						warn!("icp difference is greater than 1%");
-						let _ = pause_hub().await?;
+						// let _ = pause_hub().await?;
 					}
 				}
 			}
@@ -439,7 +439,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				if e_amount > s_chain_amount {
 					if (e_amount - s_chain_amount) as f64 / e_amount as f64 > 0.01 {
 						warn!("RICH difference is greater than 1%");
-						let _ = pause_hub().await?;
+						// let _ = pause_hub().await?;
 					}
 				}
 			}
@@ -540,7 +540,7 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 				if eicp_supply > s_chain_amount {
 					if (eicp_supply - s_chain_amount) as f64 / eicp_supply as f64 > 0.01 {
 						warn!("{:?} difference is greater than 1%", &canister);
-						let _ = pause_hub().await?;
+						// let _ = pause_hub().await?;
 					}
 				}
 			}
