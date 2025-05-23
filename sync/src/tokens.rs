@@ -397,22 +397,22 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		info!("RICH e_chain_amount: {:?}", &e_amount);
 		info!("RICH s_chain_amount: {:?}", &s_chain_amount);
 		info!("RICH hub_amount: {:?}", &hub_amount);
-		// info!(
-		// 	"RICH S-E 差异: {:?}, 目前比例 {:?} %",
-		// 	&s_chain_amount - &e_amount,
-		// 	&e_amount
-		// 		.checked_mul(100)
-		// 		.and_then(|n| n.checked_div(s_chain_amount))
-		// 		.unwrap_or_default()
-		// );
 		info!(
-			"RICH E-S 差异: {:?}, 目前比例 {:?} %",
-			&e_amount - &s_chain_amount,
-			&s_chain_amount
+			"RICH S-E 差异: {:?}, 目前比例 {:?} %",
+			&s_chain_amount - &e_amount,
+			&e_amount
 				.checked_mul(100)
-				.and_then(|n| n.checked_div(e_amount))
+				.and_then(|n| n.checked_div(s_chain_amount))
 				.unwrap_or_default()
 		);
+		// info!(
+		// 	"RICH E-S 差异: {:?}, 目前比例 {:?} %",
+		// 	&e_amount - &s_chain_amount,
+		// 	&s_chain_amount
+		// 		.checked_mul(100)
+		// 		.and_then(|n| n.checked_div(e_amount))
+		// 		.unwrap_or_default()
+		// );
 		info!(
 			"RICH H-E 差异: {:?} 目前比例 {:?} %",
 			&hub_amount - &e_amount,
