@@ -115,6 +115,11 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	sync_rune(&db, "UDUCKLING_ID_WHRZ_ODIN", "Bitcoin-runes-UDUCKLING•ID•WHRZ•ODIN", 8_i16).await?;
 	sync_rune(&db, "ODINBOT_ID_GIJQ_ODIN", "Bitcoin-runes-ODINBOT•ID•GIJQ•ODIN", 8_i16).await?;
 	sync_rune(&db, "BITBULL_ID_VCZO_ODIN", "Bitcoin-runes-BITBULL•ID•VCZO•ODIN", 8_i16).await?;
+	// 4
+	sync_rune(&db, "ICP_WORLD_COMPUTER", "Bitcoin-runes-ICP•WORLD•COMPUTER", 6_i16).await?;
+	sync_rune(&db, "MAKE_CRYPTO_FUN_AGAIN", "Bitcoin-runes-MAKE•CRYPTO•FUN•AGAIN", 8_i16).await?;
+	sync_rune(&db, "PROOF_OF_MEMES", "Bitcoin-runes-PROOF•OF•MEMES", 8_i16).await?;
+	sync_rune(&db, "PUP_WIF_WOOF_OF_WORK", "Bitcoin-runes-PUP•WIF•WOOF•OF•WORK", 8_i16).await?;
 
 	sync_ckbtc(&db).await?;
 	sync_icp(&db).await?;

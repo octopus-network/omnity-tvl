@@ -55,10 +55,14 @@ export BITCAT_ID_YRMO_ODIN=xlwi6-kyaaa-aaaar-qarya-cai
 export GOLDBTC_ID_PGZD_ODIN=xfufw-riaaa-aaaar-qarza-cai
 export AIDEX_ID_AZNX_ODIN=vno2t-diaaa-aaaar-qarva-cai
 export AOT_ID_GRMI_ODIN=vrkac-uiaaa-aaaar-qarxa-cai
-
 export ODINPEPE_ID_HIRM_ODIN=2zikd-gyaaa-aaaar-qaqqa-cai
 export FLFWORL_ID_PUFE_ODIN=w5jqy-6iaaa-aaaar-qbl5q-cai
 export UDUCKLING_ID_WHRZ_ODIN=wtl5q-fyaaa-aaaar-qbl4q-cai
 export ODINBOT_ID_GIJQ_ODIN=wz7po-liaaa-aaaar-qbmaa-cai
 export BITBULL_ID_VCZO_ODIN=wpphb-syaaa-aaaar-qbl6q-cai
+
+export ICP_WORLD_COMPUTER=gbavh-xyaaa-aaaar-qanxq-cai
+export MAKE_CRYPTO_FUN_AGAIN=ej2kc-fyaaa-aaaar-qan3q-cai
+export PROOF_OF_MEMES=eo3mw-iaaaa-aaaar-qan3a-cai
+export PUP_WIF_WOOF_OF_WORK=ehyhk-6iaaa-aaaar-qan2q-cai
 ```
