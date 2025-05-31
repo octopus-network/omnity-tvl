@@ -22,7 +22,7 @@ struct EthcallRpcRequest {
 	params: Vec<serde_json::Value>,
 }
 
-// For ROOTSTOCK/MERLIN/XLAYER/CORE/BASE/AILAYER
+// For ROOTSTOCK/MERLIN/XLAYER/CORE/BASE/AILAYER https://chainlist.org/
 pub async fn sync_with_eth_call(ledger_id: &str, url: &str) -> Result<String, Box<dyn Error>> {
 	let method_signature = "totalSupply()";
 	let method_hash = web3::signing::keccak256(method_signature.as_bytes());
@@ -83,11 +83,7 @@ pub async fn sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 	};
 
 	let client = reqwest::Client::new();
-	let response = client
-		.post("https://fullnode.mainnet.sui.io:443")
-		.json(&rpc_request)
-		.send()
-		.await?;
+	let response = client.post("https://fullnode.mainnet.sui.io:443").json(&rpc_request).send().await?;
 	let body = response.text().await?;
 	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
 		if let Some(layer_one) = value.as_object() {
@@ -282,8 +278,7 @@ pub async fn sync_with_bitfinity(ledger_id: &str) -> Result<String, Box<dyn Erro
 }
 
 pub async fn sync_with_bitlayer(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let url =
-		"https://api.btrscan.com/scan/api?module=token&action=tokensupply&contractaddress=".to_string() + ledger_id;
+	let url = "https://api.btrscan.com/scan/api?module=token&action=tokensupply&contractaddress=".to_string() + ledger_id;
 	let client = reqwest::Client::new();
 	let response = client.get(url).send().await?;
 	let body = response.text().await?;
@@ -307,9 +302,7 @@ pub async fn sync_with_bitlayer(ledger_id: &str) -> Result<String, Box<dyn Error
 }
 
 pub async fn sync_with_bsquared(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let url = "https://explorer.bsquared.network/api?contractaddress=".to_string()
-		+ ledger_id
-		+ "&module=token&action=tokeninfo";
+	let url = "https://explorer.bsquared.network/api?contractaddress=".to_string() + ledger_id + "&module=token&action=tokeninfo";
 	let client = reqwest::Client::new();
 	let response = client.get(url).send().await?;
 	let body = response.text().await?;
@@ -454,10 +447,7 @@ pub async fn _sync_with_sui(ledger_id: &str) -> Result<String, Box<dyn Error>> {
 pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, Box<dyn Error>> {
 	let transport = web3::transports::Http::new("https://api.zan.top/core-mainnet")?;
 	let web3 = web3::Web3::new(transport);
-	let url = "https://openapi.coredao.org/api?module=contract&action=getabi&address=".to_string()
-		+ ledger_id
-		+ "&apikey="
-		+ api_token;
+	let url = "https://openapi.coredao.org/api?module=contract&action=getabi&address=".to_string() + ledger_id + "&apikey=" + api_token;
 
 	let client = reqwest::Client::new();
 	let response = client.get(url).send().await?;
@@ -472,9 +462,7 @@ pub async fn sync_with_core(ledger_id: &str, api_token: &str) -> Result<String, 
 		};
 		let contract_address = Address::from_str(ledger_id)?;
 		let contract = Contract::from_json(web3.eth(), contract_address, abi.as_bytes())?;
-		let result: U256 = contract
-			.query("totalSupply", (), None, Options::default(), None)
-			.await?;
+		let result: U256 = contract.query("totalSupply", (), None, Options::default(), None).await?;
 		return Ok(result.to_string());
 	} else {
 		return Err("core error".into());

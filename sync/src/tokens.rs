@@ -78,7 +78,7 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 			sync_with_osmosis("factory%2Fosmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm%2FsICP-icrc-ckBTC").await?;
 		let bitfinity = sync_with_bitfinity("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35").await?;
 		let ton = sync_with_ton("EQD3IJCxBHFRNCFFLmtnoIyMEYt_Zio3WT0YQQujA2tSuCTZ").await?;
-		let core = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://rpc-core.icecreamswap.com").await?;
+		let core = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://rpc.ankr.com/core").await?;
 
 		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
 		let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
@@ -301,7 +301,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let xlayer = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://xlayer.drpc.org").await?;
 		let merlin = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc.merlinchain.io").await?;
-		let core = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc-core.icecreamswap.com").await?;
+		let core = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://rpc.ankr.com/core").await?;
 		let base = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", "https://base-pokt.nodies.app").await?;
 		//目前eICP占大头，不会低于1%，一旦这个占比小了，Ton/eSolana/会小于1%, 15 chains
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
