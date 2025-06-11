@@ -9,7 +9,6 @@ psql -U postgres
 CREATE DATABASE tvl ENCODING = 'UTF8';
 
 sea-orm-cli migrate up -u postgres://postgres:omnity_go@localhost/tvl
-# sea-orm-cli migrate fresh -u postgres://postgres:omnity_go@localhost/tvl
 # sea-orm-cli generate entity -u postgres://postgres:omnity_go@localhost:5432/tvl -o src/entities
 ```
 
@@ -35,7 +34,6 @@ export NEURON_CANISTER_ID=buwm7-7yaaa-aaaar-qagva-cai
 export DRAGGIN_CANISTER_ID=zfcdd-tqaaa-aaaaq-aaaga-cai
 export ICP_CANISTER_ID=ryjl3-tyaaa-aaaaa-aaaba-cai
 export OMNITY_CUSTOMS_BITCOIN_CANISTER_ID=7rvjr-3qaaa-aaaar-qaeyq-cai
-
 export ODINAPE_ID_BVAE_ODIN=26jmx-laaaa-aaaar-qaqqq-cai
 export ODINDOG_ID_YTTL_ODIN=eazb6-tqaaa-aaaar-qan2a-cai
 export ODINGOLD_ID_VACP_ODIN=6pkg6-jaaaa-aaaar-qapna-cai
@@ -60,7 +58,6 @@ export FLFWORL_ID_PUFE_ODIN=w5jqy-6iaaa-aaaar-qbl5q-cai
 export UDUCKLING_ID_WHRZ_ODIN=wtl5q-fyaaa-aaaar-qbl4q-cai
 export ODINBOT_ID_GIJQ_ODIN=wz7po-liaaa-aaaar-qbmaa-cai
 export BITBULL_ID_VCZO_ODIN=wpphb-syaaa-aaaar-qbl6q-cai
-
 export ICP_WORLD_COMPUTER=gbavh-xyaaa-aaaar-qanxq-cai
 export MAKE_CRYPTO_FUN_AGAIN=ej2kc-fyaaa-aaaar-qan3q-cai
 export PROOF_OF_MEMES=eo3mw-iaaaa-aaaar-qan3a-cai
