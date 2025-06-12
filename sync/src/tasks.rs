@@ -4,25 +4,21 @@ use sea_orm::DbConn;
 use std::error::Error;
 use std::{future::Future, sync::Arc};
 
-pub const TOKEN_ON_CHAIN_SYNC_INTERVAL: u64 = 5;
-pub const FETCH_LIMIT: u64 = 50;
-
-pub fn spawn_sync_task<F, Fut>(db_conn: Arc<DbConn>, _interval: u64, sync_fn: F) -> tokio::task::JoinHandle<()>
+pub fn spawn_sync_task<F, Fut>(db_conn: Arc<DbConn>, sync_fn: F) -> tokio::task::JoinHandle<()>
 where
-	F: Fn(Arc<DbConn>) -> Fut + Send + Sync + 'static,
+	F: FnOnce(Arc<DbConn>) -> Fut + Send + Sync + 'static,
 	Fut: Future<Output = Result<(), Box<dyn Error>>> + Send + 'static,
 {
 	tokio::spawn(async move {
-		sync_fn(db_conn.clone()).await.unwrap_or_else(|e| {
+		sync_fn(db_conn).await.unwrap_or_else(|e| {
 			error!("sync task error: {}", e);
 		});
 	})
 }
 
 pub async fn execute_sync_tasks(db_conn: Arc<DbConn>) {
-	let sync_tokens_on_ledgers = spawn_sync_task(db_conn.clone(), TOKEN_ON_CHAIN_SYNC_INTERVAL, |db_conn| async move {
-		sync_tokens_on_ledgers(&db_conn).await
-	});
+	let sync_tokens_on_ledgers = spawn_sync_task(db_conn, |db_conn| async move { sync_tokens_on_ledgers(&db_conn).await });
+
 	let _ = tokio::join!(sync_tokens_on_ledgers);
 }
 

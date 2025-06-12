@@ -16,8 +16,8 @@ use tokio::sync::Mutex;
 pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	with_canister("CKBTC_CANISTER_ID", |agent, canister_id| async move {
 		info!("syncing tokens on CKBTC canister ledgers... ");
-		let ckbtc_token_id = "sICP-icrc-ckBTC";
 
+		let ckbtc_token_id = "sICP-icrc-ckBTC";
 		let ckbtc_reqst = Account {
 			owner: Principal::from_text("nlgkm-4qaaa-aaaar-qah2q-cai".to_string())?,
 			subaccount: None,
@@ -28,21 +28,6 @@ pub async fn sync_ckbtc(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 		let mut hub_amount = 0;
 		let mut count = 0;
-		// while hub_amount == 0 {
-		// 	while count != 5 {
-		// 		if let Ok(ckbtc_amounts) = Query::get_all_amount_by_token(db, ckbtc_token_id).await {
-		// 			count = ckbtc_amounts.len();
-		// 			if ckbtc_amounts.len() == 5 {
-		// 				for tamount in &ckbtc_amounts {
-		// 					if let Ok(amt) = tamount.amount.parse::<u128>() {
-		// 						hub_amount += amt;
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// 	break;
-		// }
 		let hub_amount1 = Arc::new(Mutex::new(0u128));
 		let count1 = Arc::new(Mutex::new(0usize));
 		while hub_amount == 0 {
@@ -174,10 +159,6 @@ pub async fn sync_icp(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		let ret = agent.query(&canister_id, "icrc1_balance_of").with_arg(arg).call().await?;
 		let icp_amount = Decode!(&ret, Nat)?.to_string().replace("_", "");
 
-		// let mut hub_amount = 0;
-		// for tamount in Query::get_all_amount_by_token(db, icp_token_id).await? {
-		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		// }
 		let hub_amount1 = Arc::new(Mutex::new(0u128));
 		let amount_clone = hub_amount1.clone();
 		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
@@ -350,10 +331,6 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				+ core_supply
 				+ base_supply;
 
-		// let mut hub_amount = 0;
-		// for tamount in Query::get_all_amount_by_token(db, rich_token_id).await? {
-		// 	hub_amount += tamount.amount.parse::<u128>().unwrap_or(0)
-		// }
 		let hub_amount1 = Arc::new(Mutex::new(0u128));
 		let amount_clone = hub_amount1.clone();
 		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
@@ -405,14 +382,7 @@ pub async fn sync_rich(db: &DbConn) -> Result<(), Box<dyn Error>> {
 				.and_then(|n| n.checked_div(s_chain_amount))
 				.unwrap_or_default()
 		);
-		// info!(
-		// 	"RICH E-S 差异: {:?}, 目前比例 {:?} %",
-		// 	&e_amount - &s_chain_amount,
-		// 	&s_chain_amount
-		// 		.checked_mul(100)
-		// 		.and_then(|n| n.checked_div(e_amount))
-		// 		.unwrap_or_default()
-		// );
+
 		info!(
 			"RICH H-E 差异: {:?} 目前比例 {:?} %",
 			&hub_amount - &e_amount,
@@ -457,11 +427,6 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 		let ret = agent.query(&canister_id, "icrc1_total_supply").with_arg(arg).call().await?;
 		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
 		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
-
-		// let mut hub_amount = 0;
-		// if let Some(chain_token) = Query::get_token_amount_by_id(db, token.to_string(),
-		// "eICP".to_string()).await? { 	hub_amount = chain_token.amount.parse::<u128>().unwrap_or(0)
-		// }
 
 		let hub_amount1 = Arc::new(Mutex::new(0u128));
 		let amount_clone = hub_amount1.clone();
