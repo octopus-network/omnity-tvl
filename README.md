@@ -62,4 +62,15 @@ export ICP_WORLD_COMPUTER=gbavh-xyaaa-aaaar-qanxq-cai
 export MAKE_CRYPTO_FUN_AGAIN=ej2kc-fyaaa-aaaar-qan3q-cai
 export PROOF_OF_MEMES=eo3mw-iaaaa-aaaar-qan3a-cai
 export PUP_WIF_WOOF_OF_WORK=ehyhk-6iaaa-aaaar-qan2q-cai
+
+export BOBAI_ID_XTTH_ODIN=6zy26-xqaaa-aaaar-qbnwq-cai
+export BTCGF_ID_ZJFP_ODIN=7ptcv-caaaa-aaaar-qbntq-cai
+export BTHACD_ID_FQEE_ODIN=22ltm-7aaaa-aaaar-qbnnq-cai
+export WBTC_ID_RBTM_ODIN=6c5g3-niaaa-aaaar-qbnua-cai
+export BTC_ID_HVUQ_ODIN=6q3rc-byaaa-aaaar-qbnxa-cai
+export COO_ID_HTEX_ODIN=2pmcb-6iaaa-aaaar-qbnoa-cai
+export RUNES_ID_AJBS_ODIN=u3tw2-qyaaa-aaaar-qaovq-cai
+export ODINBTC_ID_ZLOQ_ODIN=wbnkj-jiaaa-aaaar-qbl7q-cai
+export SUPEREX_ID_OOER_ODIN=2mzpm-bqaaa-aaaar-qapwa-cai
+export SOB_ID_YYQH_ODIN=q4uur-kiaaa-aaaar-qbmwa-cai
 ```
