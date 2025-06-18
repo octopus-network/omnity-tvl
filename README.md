@@ -62,7 +62,6 @@ export ICP_WORLD_COMPUTER=gbavh-xyaaa-aaaar-qanxq-cai
 export MAKE_CRYPTO_FUN_AGAIN=ej2kc-fyaaa-aaaar-qan3q-cai
 export PROOF_OF_MEMES=eo3mw-iaaaa-aaaar-qan3a-cai
 export PUP_WIF_WOOF_OF_WORK=ehyhk-6iaaa-aaaar-qan2q-cai
-
 export BOBAI_ID_XTTH_ODIN=6zy26-xqaaa-aaaar-qbnwq-cai
 export BTCGF_ID_ZJFP_ODIN=7ptcv-caaaa-aaaar-qbntq-cai
 export BTHACD_ID_FQEE_ODIN=22ltm-7aaaa-aaaar-qbnnq-cai
@@ -73,4 +72,12 @@ export RUNES_ID_AJBS_ODIN=u3tw2-qyaaa-aaaar-qaovq-cai
 export ODINBTC_ID_ZLOQ_ODIN=wbnkj-jiaaa-aaaar-qbl7q-cai
 export SUPEREX_ID_OOER_ODIN=2mzpm-bqaaa-aaaar-qapwa-cai
 export SOB_ID_YYQH_ODIN=q4uur-kiaaa-aaaar-qbmwa-cai
+
+export SPONGEBOB_ID_JUXZ_ODIN=xmb2i-baaaa-aaaar-qao5a-cai
+export BUGATTI_ID_WBTD_ODIN=xcdxa-2qaaa-aaaar-qao4a-cai
+export PIZZA_ID_EVQD_ODIN=wimv2-yaaaa-aaaar-qao3a-cai
+export BAGCAT_ID_JKYH_ODIN=xzglf-aiaaa-aaaar-qao6q-cai
+export MSTR_ID_MZOU_ODIN=5som5-riaaa-aaaar-qbn4a-cai
+export ODIN_ID_SIVA_ODIN=6tyin-yaaaa-aaaar-qaqkq-cai
+export LABUBU_ID_URZS_ODIN=5vpkj-4qaaa-aaaar-qbn4q-cai
 ```

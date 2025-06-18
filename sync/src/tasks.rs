@@ -28,7 +28,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
 
-	// 13 + 2 + 4 + 5 + 4 + 10 = 38
+	// 13 + 2 + 4 + 5 + 4 + 10 + 7 = 45
 	let runes = [
 		("ODINAPE_ID_BVAE_ODIN", "Bitcoin-runes-ODINAPE•ID•BVAE•ODIN", 8_i16),
 		("ODINDOG_ID_YTTL_ODIN", "Bitcoin-runes-ODINDOG•ID•YTTL•ODIN", 8_i16),
@@ -68,6 +68,13 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		("ODINBTC_ID_ZLOQ_ODIN", "Bitcoin-runes-ODINBTC•ID•ZLOQ•ODIN", 8_i16),
 		("SUPEREX_ID_OOER_ODIN", "Bitcoin-runes-SUPEREX•ID•OOER•ODIN", 8_i16),
 		("SOB_ID_YYQH_ODIN", "Bitcoin-runes-SOB•ID•YYQH•ODIN", 8_i16),
+		("SPONGEBOB_ID_JUXZ_ODIN", "Bitcoin-runes-SPONGEBOB•ID•JUXZ•ODIN", 8_i16),
+		("BUGATTI_ID_WBTD_ODIN", "Bitcoin-runes-BUGATTI•ID•WBTD•ODIN", 8_i16),
+		("PIZZA_ID_EVQD_ODIN", "Bitcoin-runes-PIZZA•ID•EVQD•ODIN", 8_i16),
+		("BAGCAT_ID_JKYH_ODIN", "Bitcoin-runes-BAGCAT•ID•JKYH•ODIN", 8_i16),
+		("MSTR_ID_MZOU_ODIN", "Bitcoin-runes-MSTR•ID•MZOU•ODIN", 8_i16),
+		("ODIN_ID_SIVA_ODIN", "Bitcoin-runes-ODIN•ID•SIVA•ODIN", 8_i16),
+		("LABUBU_ID_URZS_ODIN", "Bitcoin-runes-LABUBU•ID•URZS•ODIN", 8_i16),
 	];
 	for (id, name, decimals) in runes {
 		sync_rune(db, id, name, decimals).await?;
