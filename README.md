@@ -72,7 +72,6 @@ export RUNES_ID_AJBS_ODIN=u3tw2-qyaaa-aaaar-qaovq-cai
 export ODINBTC_ID_ZLOQ_ODIN=wbnkj-jiaaa-aaaar-qbl7q-cai
 export SUPEREX_ID_OOER_ODIN=2mzpm-bqaaa-aaaar-qapwa-cai
 export SOB_ID_YYQH_ODIN=q4uur-kiaaa-aaaar-qbmwa-cai
-
 export SPONGEBOB_ID_JUXZ_ODIN=xmb2i-baaaa-aaaar-qao5a-cai
 export BUGATTI_ID_WBTD_ODIN=xcdxa-2qaaa-aaaar-qao4a-cai
 export PIZZA_ID_EVQD_ODIN=wimv2-yaaaa-aaaar-qao3a-cai
@@ -80,4 +79,13 @@ export BAGCAT_ID_JKYH_ODIN=xzglf-aiaaa-aaaar-qao6q-cai
 export MSTR_ID_MZOU_ODIN=5som5-riaaa-aaaar-qbn4a-cai
 export ODIN_ID_SIVA_ODIN=6tyin-yaaaa-aaaar-qaqkq-cai
 export LABUBU_ID_URZS_ODIN=5vpkj-4qaaa-aaaar-qbn4q-cai
+
+export ETH_ID_XWQV_ODIN=oxv4x-vqaaa-aaaar-qbo2q-cai
+export BOBO_ID_MNLE_ODIN=oftlo-zaaaa-aaaar-qbozq-cai
+export BTCGM_ID_UTSI_ODIN=o6wxl-dyaaa-aaaar-qbo3a-cai
+export AIZ_ID_AJHX_ODIN=ozxr7-oaaaa-aaaar-qbo3q-cai
+export GDOG_ID_TCCK_ODIN=ihzwf-vyaaa-aaaar-qbopa-cai
+export GOB_IS_GOB_IS_GOB=re5bs-eiaaa-aaaar-qbmsa-cai
+export NARRATIVE_ID_GKBG_ODIN=k2eyn-gqaaa-aaaar-qboaq-cai
+export WETH_ID_BFPX_ODIN=myofg-kiaaa-aaaar-qbowa-cai
 ```
