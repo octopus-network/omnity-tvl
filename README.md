@@ -79,7 +79,6 @@ export BAGCAT_ID_JKYH_ODIN=xzglf-aiaaa-aaaar-qao6q-cai
 export MSTR_ID_MZOU_ODIN=5som5-riaaa-aaaar-qbn4a-cai
 export ODIN_ID_SIVA_ODIN=6tyin-yaaaa-aaaar-qaqkq-cai
 export LABUBU_ID_URZS_ODIN=5vpkj-4qaaa-aaaar-qbn4q-cai
-
 export ETH_ID_XWQV_ODIN=oxv4x-vqaaa-aaaar-qbo2q-cai
 export BOBO_ID_MNLE_ODIN=oftlo-zaaaa-aaaar-qbozq-cai
 export BTCGM_ID_UTSI_ODIN=o6wxl-dyaaa-aaaar-qbo3a-cai
@@ -88,4 +87,7 @@ export GDOG_ID_TCCK_ODIN=ihzwf-vyaaa-aaaar-qbopa-cai
 export GOB_IS_GOB_IS_GOB=re5bs-eiaaa-aaaar-qbmsa-cai
 export NARRATIVE_ID_GKBG_ODIN=k2eyn-gqaaa-aaaar-qboaq-cai
 export WETH_ID_BFPX_ODIN=myofg-kiaaa-aaaar-qbowa-cai
+
+export EICP_RUNES_X_BITCOIN=2tkm7-oiaaa-aaaar-qaija-cai
+export EICP_DOG_GO_TO_THE_MOON=fmazi-nqaaa-aaaar-qagmq-cai
 ```

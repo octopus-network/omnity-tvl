@@ -514,3 +514,274 @@ pub async fn sync_rune(db: &DbConn, canister: &str, token: &str, decimal: i16) -
 	})
 	.await
 }
+
+pub async fn sync_runes_x_bitcoin(db: &DbConn) -> Result<(), Box<dyn Error>> {
+	with_canister("EICP_RUNES_X_BITCOIN", |agent, canister_id| async move {
+		info!("syncing tokens on RUNES•X•BITCOIN.OT canister ledgers... ");
+		let runes_x_bitcoin_token_id = "Bitcoin-runes-RUNES•X•BITCOIN";
+
+		let arg = Encode!(&Vec::<u8>::new())?;
+		let ret = agent.query(&canister_id, "icrc1_total_supply").with_arg(arg).call().await?;
+		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
+		let bitlayer = sync_with_bitlayer("0xfdd3173d2c3defa7a3ac6c08ad0f03dc9eceb230").await?;
+		let ethereum = sync_with_ethereum("0xbe175b13f733e8b57382717597dbd8205e6fd24a", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
+		// let bob = sync_with_bob("0x6012fcafe3f570dcd491da3546ff748eb9308146").await?;
+
+		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
+		let bitlayer_supply = bitlayer.parse::<u128>().unwrap_or_default();
+		let ethereum_supply = ethereum.parse::<u128>().unwrap_or_default();
+		// let bob_supply = bob.parse::<u128>().unwrap_or_default();
+
+		info!("eicp RUNES•X•BITCOIN : {:?}", eicp_supply);
+		info!("bitlayer RUNES•X•BITCOIN : {:?}", bitlayer_supply);
+		info!("ethereum RUNES•X•BITCOIN : {:?}", ethereum_supply);
+		// info!("bob RUNES•X•BITCOIN : {:?}", bob_supply);
+
+		let e_amount = eicp_supply + bitlayer_supply + ethereum_supply; // + bob_supply;
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let amount_clone = hub_amount1.clone();
+		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+			let tokens_on_chains_args = Encode!(&None::<ChainId>, &runes_x_bitcoin_token_id.to_string(), &0u64, &100_u64)?;
+			let return_output = agent
+				.query(&canister_id, "get_chain_tokens")
+				.with_arg(tokens_on_chains_args)
+				.call()
+				.await?;
+
+			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+				if !tokens_on_chains.is_empty() {
+					for tamount in tokens_on_chains {
+						*amount_clone.lock().await += tamount.amount
+					}
+				}
+			}
+			Ok(())
+		})
+		.await?;
+		let hub_amount = *hub_amount1.lock().await;
+
+		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
+		let s_chain_amount_clone = s_chain_amount1.clone();
+		let _ = with_canister("OMNITY_CUSTOMS_BITCOIN_CANISTER_ID", |agent, canister_id| async move {
+			let rune_token_lock_args = Encode!(&runes_x_bitcoin_token_id.to_string())?;
+			let token_lock_return_output = agent
+				.query(&canister_id, "token_lock_amount")
+				.with_arg(rune_token_lock_args)
+				.call()
+				.await?;
+
+			let rune_amount = Decode!(&token_lock_return_output, u128)?;
+			*s_chain_amount_clone.lock().await = rune_amount;
+
+			Ok(())
+		})
+		.await?;
+		let s_chain_amount = *s_chain_amount1.lock().await;
+
+		info!("RUNES•X•BITCOIN e_chain_amount: {:?}", &e_amount);
+		info!("RUNES•X•BITCOIN s_chain_amount: {:?}", &s_chain_amount);
+		info!("RUNES•X•BITCOIN hub_amount: {:?}", &hub_amount);
+		info!(
+			"RUNES•X•BITCOIN S-E 差异: {:?}, 目前比例 {:?} %",
+			&s_chain_amount - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(s_chain_amount))
+				.unwrap_or_default()
+		);
+
+		info!(
+			"RUNES•X•BITCOIN H-E 差异: {:?} 目前比例 {:?} %",
+			&hub_amount - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(hub_amount))
+				.unwrap_or_default()
+		);
+
+		let token_on_ledger = token_on_ledger::Model::new(
+			"RUNES".to_string(),
+			"RUNES•X•BITCOIN".to_string(),
+			0_i16,
+			e_amount.to_string(),
+			s_chain_amount.to_string(),
+			hub_amount.to_string(),
+		);
+		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+		if e_amount != 0 && s_chain_amount != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, s_chain_amount, hub_amount) {
+				warn!("RUNES•X•BITCOIN 差距大了！！！");
+				if e_amount > s_chain_amount {
+					if (e_amount - s_chain_amount) as f64 / e_amount as f64 > 0.01 {
+						warn!("RUNES•X•BITCOIN difference is greater than 1%");
+						let _ = pause_hub().await?;
+					}
+				}
+			}
+		}
+		Ok(())
+	})
+	.await
+}
+
+pub async fn sync_dog_go_to_the_moon(db: &DbConn) -> Result<(), Box<dyn Error>> {
+	with_canister("EICP_DOG_GO_TO_THE_MOON", |agent, canister_id| async move {
+		info!("syncing tokens on DOG•GO•TO•THE•MOON canister ledgers... ");
+		let dog_go_to_the_moon_token_id = "Bitcoin-runes-DOG•GO•TO•THE•MOON";
+
+		let arg = Encode!(&Vec::<u8>::new())?;
+		let ret = agent.query(&canister_id, "icrc1_total_supply").with_arg(arg).call().await?;
+		let eicp = Decode!(&ret, Nat)?.to_string().replace("_", "");
+
+		let base = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://base-pokt.nodies.app").await?;
+		let bevm = sync_with_bevm("0xbe175b13f733e8b57382717597dbd8205e6fd24a").await?;
+		let xlayer = sync_with_eth_call("0x56bf74ef5d4ad161d2d8d5d576e70108f152cd35", "https://xlayer.drpc.org").await?;
+		// let bitfinity = sync_with_bitfinity("0x44b74e57a9ef3828f1eb8d47c42acdf6ce1445b8").await?;
+		let key = std::env::var("ALCHEMY_KEY")
+			.map_err(|_| anyhow!("LCHEMY_KEY is not found"))
+			.unwrap();
+		let url = "https://rootstock-mainnet.g.alchemy.com/v2/".to_string() + &key;
+		let rootstock = sync_with_eth_call("0xfd4de66eca49799bdde66eb33654e2198ab7bba4", &url).await?;
+		let osmosis =
+			sync_with_osmosis("factory/osmo10c4y9csfs8q7mtvfg4p9gd8d0acx0hpc2mte9xqzthd7rd3348tsfhaesm/Bitcoin-runes-DOG.GO.TO.THE.MOON")
+				.await?;
+		let bsquared = sync_with_bsquared("0x5ea478b64c43c683d692a3016ce07550565e929a").await?;
+		let ton = sync_with_ton("EQBlHAxiJMi8EpfeuKX4NAzvBcJdN20MBIWjUZBmIq21NdbJ").await?;
+		let ethereum = sync_with_ethereum("0x2fd9afe2589b6bb44c61ca8e0620a43070efb941", "275CTXW29UE4Q7219PX6AQ1I1PJZRH9H7P").await?;
+		let ailayer = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://mainnet-rpc.ailayer.xyz").await?;
+		let merlin = sync_with_eth_call("0x51ccde9ca75d95bb55ece1775fcbff91324b18a6", "https://rpc.merlinchain.io").await?;
+		let bitlayer = sync_with_bitlayer("0x90a75e214bda302196cb8279c1331320579e3d91").await?;
+		// let bob = sync_with_bob("0xeb95424bd91dbd735db0bcd6ece191ef2e24d286").await?;
+		let core = sync_with_eth_call("0x3662afef38c94a6184cdfce8dcc60e7c305b8299", "https://rpc.ankr.com/core").await?;
+
+		let eicp_supply = eicp.parse::<u128>().unwrap_or_default();
+		// let bitfinity_supply = bitfinity.parse::<u128>().unwrap_or_default();
+		let ailayer_supply = ailayer.parse::<u128>().unwrap_or_default();
+		let bsquared_supply = bsquared.parse::<u128>().unwrap_or_default();
+		let bevm_supply = bevm.parse::<u128>().unwrap_or_default();
+		// let bob_supply = bob.parse::<u128>().unwrap_or_default();
+		let ethereum_supply = ethereum.parse::<u128>().unwrap_or_default();
+		let ton_supply = ton.parse::<u128>().unwrap_or_default();
+		let rootstock_supply = rootstock.parse::<u128>().unwrap_or_default();
+		let xlayer_supply = xlayer.parse::<u128>().unwrap_or_default();
+		let merlin_supply = merlin.parse::<u128>().unwrap_or_default();
+		let bitlayer_supply = bitlayer.parse::<u128>().unwrap_or_default();
+		let core_supply = core.parse::<u128>().unwrap_or_default();
+		let base_supply = base.parse::<u128>().unwrap_or_default();
+		let osmosis_supply = osmosis.parse::<u128>().unwrap_or_default();
+		// info!("bob DOG•GO•TO•THE•MOON : {:?}", bob_supply);
+		info!("rootstock DOG•GO•TO•THE•MOON : {:?}", rootstock_supply);
+		info!("ethereum DOG•GO•TO•THE•MOON : {:?}", ethereum_supply);
+		info!("bevm DOG•GO•TO•THE•MOON : {:?}", bevm_supply);
+		info!("xlayer DOG•GO•TO•THE•MOON : {:?}", xlayer_supply);
+		info!("merlin DOG•GO•TO•THE•MOON : {:?}", merlin_supply);
+		info!("ailayer DOG•GO•TO•THE•MOON : {:?}", ailayer_supply);
+		info!("eicp DOG•GO•TO•THE•MOON : {:?}", eicp_supply);
+		// info!("bitfinity DOG•GO•TO•THE•MOON : {:?}", bitfinity_supply);
+		info!("bsquared DOG•GO•TO•THE•MOON : {:?}", bsquared_supply);
+		info!("ton DOG•GO•TO•THE•MOON : {:?}", ton_supply);
+		info!("bitlayer DOG•GO•TO•THE•MOON : {:?}", bitlayer_supply);
+		info!("core DOG•GO•TO•THE•MOON : {:?}", core_supply);
+		info!("base DOG•GO•TO•THE•MOON : {:?}", base_supply);
+		info!("osmosis DOG•GO•TO•THE•MOON : {:?}", osmosis_supply);
+
+		let e_amount = eicp_supply
+				// + bitfinity_supply
+				+ ailayer_supply
+				+ bitlayer_supply
+				+ bsquared_supply
+				+ bevm_supply
+				// + bob_supply 
+				+ ethereum_supply
+				+ ton_supply + rootstock_supply
+				+ xlayer_supply
+				+ merlin_supply
+				+ core_supply
+				+ base_supply
+				+ osmosis_supply;
+
+		let hub_amount1 = Arc::new(Mutex::new(0u128));
+		let amount_clone = hub_amount1.clone();
+		let _ = with_canister("OMNITY_HUB_CANISTER_ID", |agent, canister_id| async move {
+			let tokens_on_chains_args = Encode!(&None::<ChainId>, &dog_go_to_the_moon_token_id.to_string(), &0u64, &100_u64)?;
+			let return_output = agent
+				.query(&canister_id, "get_chain_tokens")
+				.with_arg(tokens_on_chains_args)
+				.call()
+				.await?;
+
+			if let Ok(tokens_on_chains) = Decode!(&return_output, Result<Vec<OmnityTokenOnChain>, OmnityError>)? {
+				if !tokens_on_chains.is_empty() {
+					for tamount in tokens_on_chains {
+						*amount_clone.lock().await += tamount.amount
+					}
+				}
+			}
+			Ok(())
+		})
+		.await?;
+		let hub_amount = *hub_amount1.lock().await;
+
+		let s_chain_amount1 = Arc::new(Mutex::new(0u128));
+		let s_chain_amount_clone = s_chain_amount1.clone();
+		let _ = with_canister("OMNITY_CUSTOMS_BITCOIN_CANISTER_ID", |agent, canister_id| async move {
+			let rune_token_lock_args = Encode!(&dog_go_to_the_moon_token_id.to_string())?;
+			let token_lock_return_output = agent
+				.query(&canister_id, "token_lock_amount")
+				.with_arg(rune_token_lock_args)
+				.call()
+				.await?;
+
+			let rune_amount = Decode!(&token_lock_return_output, u128)?;
+			*s_chain_amount_clone.lock().await = rune_amount;
+
+			Ok(())
+		})
+		.await?;
+		let s_chain_amount = *s_chain_amount1.lock().await;
+
+		info!("DOG•GO•TO•THE•MOON e_chain_amount: {:?}", &e_amount);
+		info!("DOG•GO•TO•THE•MOON s_chain_amount: {:?}", &s_chain_amount);
+		info!("DOG•GO•TO•THE•MOON hub_amount: {:?}", &hub_amount);
+		info!(
+			"DOG•GO•TO•THE•MOON S-E 差异: {:?}, 目前比例 {:?} %",
+			&s_chain_amount - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(s_chain_amount))
+				.unwrap_or_default()
+		);
+
+		info!(
+			"DOG•GO•TO•THE•MOON H-E 差异: {:?} 目前比例 {:?} %",
+			&hub_amount - &e_amount,
+			&e_amount
+				.checked_mul(100)
+				.and_then(|n| n.checked_div(hub_amount))
+				.unwrap_or_default()
+		);
+
+		let token_on_ledger = token_on_ledger::Model::new(
+			"RUNES".to_string(),
+			"DOG•GO•TO•THE•MOON".to_string(),
+			5_i16,
+			e_amount.to_string(),
+			s_chain_amount.to_string(),
+			hub_amount.to_string(),
+		);
+		Mutation::save_token_on_ledger(db, token_on_ledger).await?;
+		if e_amount != 0 && s_chain_amount != 0 && hub_amount != 0 {
+			if difference_warning(e_amount, s_chain_amount, hub_amount) {
+				warn!("DOG•GO•TO•THE•MOON 差距大了！！！");
+				if e_amount > s_chain_amount {
+					if (e_amount - s_chain_amount) as f64 / e_amount as f64 > 0.01 {
+						warn!("DOG•GO•TO•THE•MOON difference is greater than 1%");
+						let _ = pause_hub().await?;
+					}
+				}
+			}
+		}
+		Ok(())
+	})
+	.await
+}

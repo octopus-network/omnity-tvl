@@ -90,5 +90,8 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 
 	sync_ckbtc(db).await?;
 	sync_icp(db).await?;
-	sync_rich(db).await
+	sync_rich(db).await?;
+
+	sync_runes_x_bitcoin(db).await?;
+	sync_dog_go_to_the_moon(db).await
 }
