@@ -28,7 +28,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
 
-	// 13 + 2 + 4 + 5 + 4 + 10 + 7 + 8 = 53
+	// 13 + 2 + 4 + 5 + 4 + 10 + 7 + 8 + 36 = 89
 	let runes = [
 		("ODINAPE_ID_BVAE_ODIN", "Bitcoin-runes-ODINAPE•ID•BVAE•ODIN", 8_i16),
 		("ODINDOG_ID_YTTL_ODIN", "Bitcoin-runes-ODINDOG•ID•YTTL•ODIN", 8_i16),
@@ -83,6 +83,43 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		("GOB_IS_GOB_IS_GOB", "Bitcoin-runes-GOB•IS•GOB•IS•GOB", 2_i16),
 		("NARRATIVE_ID_GKBG_ODIN", "Bitcoin-runes-NARRATIVE•ID•GKBG•ODIN", 8_i16),
 		("WETH_ID_BFPX_ODIN", "Bitcoin-runes-WETH•ID•BFPX•ODIN", 8_i16),
+		//36
+		("ODINFUN_ID_FDFU_ODIN", "Bitcoin-runes-ODINFUN•ID•FDFU•ODIN", 8_i16),
+		("WATTP_ID_GOIP_ODIN", "Bitcoin-runes-WATTP•ID•GOIP•ODIN", 8_i16),
+		("ZYRAS_ID_YQKN_ODIN", "Bitcoin-runes-ZYRAS•ID•YQKN•ODIN", 8_i16),
+		("MX_ID_MEKD_ODIN", "Bitcoin-runes-MX•ID•MEKD•ODIN", 8_i16),
+		("MICKEY_ID_LFWD_ODIN", "Bitcoin-runes-MICKEY•ID•LFWD•ODIN", 8_i16),
+		("WBTCO_ID_JDHI_ODIN", "Bitcoin-runes-WBTCO•ID•JDHI•ODIN", 8_i16),
+		("OIIAOIIA_ID_SGIG_ODIN", "Bitcoin-runes-OIIAOIIA•ID•SGIG•ODIN", 8_i16),
+		("OPIZ_ID_MJYV_ODIN", "Bitcoin-runes-OPIZ•ID•MJYV•ODIN", 8_i16),
+		("RATEL_ID_CZZA_ODIN", "Bitcoin-runes-RATEL•ID•CZZA•ODIN", 8_i16),
+		("BITDINO_ID_VCOB_ODIN", "Bitcoin-runes-BITDINO•ID•VCOB•ODIN", 8_i16),
+		("DRAKER_ID_MSBJ_ODIN", "Bitcoin-runes-DRAKER•ID•MSBJ•ODIN", 8_i16),
+		("PIZ_ID_KFPO_ODIN", "Bitcoin-runes-PIZ•ID•KFPO•ODIN", 8_i16),
+		("RWA_ID_JVXY_ODIN", "Bitcoin-runes-RWA•ID•JVXY•ODIN", 8_i16),
+		("ODINPANDA_ID_DLES_ODIN", "Bitcoin-runes-ODINPANDA•ID•DLES•ODIN", 8_i16),
+		("BITPNUT_ID_WSYW_ODIN", "Bitcoin-runes-BITPNUT•ID•WSYW•ODIN", 8_i16),
+		("DDDD_ID_IXND_ODIN", "Bitcoin-runes-DDDD•ID•IXND•ODIN", 8_i16),
+		("CRYBABY_ID_UZGV_ODIN", "Bitcoin-runes-CRYBABY•ID•UZGV•ODIN", 8_i16),
+		("BEARDPALS_ID_ZIAI_ODIN", "Bitcoin-runes-BEARDPALS•ID•ZIAI•ODIN", 8_i16),
+		("YCOIN_ID_LLGI_ODIN", "Bitcoin-runes-YCOIN•ID•LLGI•ODIN", 8_i16),
+		("FIST_ID_OUKV_ODIN", "Bitcoin-runes-FIST•ID•OUKV•ODIN", 8_i16),
+		("BUTTERFLY_ID_LRWR_ODIN", "Bitcoin-runes-BUTTERFLY•ID•LRWR•ODIN", 8_i16),
+		("AMERICA_ID_KAXC_ODIN", "Bitcoin-runes-AMERICA•ID•KAXC•ODIN", 8_i16),
+		("MIMO_ID_JJUP_ODIN", "Bitcoin-runes-MIMO•ID•JJUP•ODIN", 8_i16),
+		("ODINGLP_ID_MUCC_ODIN", "Bitcoin-runes-ODINGLP•ID•MUCC•ODIN", 8_i16),
+		("BABYODIN_ID_NWKQ_ODIN", "Bitcoin-runes-BABYODIN•ID•NWKQ•ODIN", 8_i16),
+		("BABYANI_ID_TMKL_ODIN", "Bitcoin-runes-BABYANI•ID•TMKL•ODIN", 8_i16),
+		("BABYDOGE_ID_UMUL_ODIN", "Bitcoin-runes-BABYDOGE•ID•UMUL•ODIN", 8_i16),
+		("BTL_ID_GUGV_ODINN", "Bitcoin-runes-BTL•ID•GUGV•ODIN", 8_i16),
+		("GROK_ID_OXWA_ODIN", "Bitcoin-runes-GROK•ID•OXWA•ODIN", 8_i16),
+		("FROLD_ID_SKGQ_ODIN", "Bitcoin-runes-FROLD•ID•SKGQ•ODIN", 8_i16),
+		("BITPEPE_ID_GKPC_ODIN", "Bitcoin-runes-BITPEPE•ID•GKPC•ODIN", 8_i16),
+		("POPMART_ID_OUQQ_ODIN", "Bitcoin-runes-POPMART•ID•OUQQ•ODIN", 8_i16),
+		("HORSE_ID_ZBZS_ODIN", "Bitcoin-runes-HORSE•ID•ZBZS•ODIN", 8_i16),
+		("ODINETX_ID_ACAY_ODIN", "Bitcoin-runes-ODINETX•ID•ACAY•ODIN", 8_i16),
+		("BITEAGLES_ID_CPLR_ODIN", "Bitcoin-runes-BITEAGLES•ID•CPLR•ODIN", 8_i16),
+		("SERGEASS_ID_WEZK_ODIN", "Bitcoin-runes-SERGEASS•ID•WEZK•ODIN", 8_i16),
 	];
 	for (id, name, decimals) in runes {
 		sync_rune(db, id, name, decimals).await?;
