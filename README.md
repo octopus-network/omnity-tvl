@@ -127,4 +127,16 @@ export HORSE_ID_ZBZS_ODIN=qjfr6-naaaa-aaaar-qbtqa-cai
 export ODINETX_ID_ACAY_ODIN=qkq4t-syaaa-aaaar-qaria-cai
 export BITEAGLES_ID_CPLR_ODIN=wxlwe-wyaaa-aaaar-qbteq-cai
 export SERGEASS_ID_WEZK_ODIN=6to4p-6aaaa-aaaar-qappa-cai
+
+export KING_ID_MNJB_ODIN=tmrkv-qiaaa-aaaar-qbt3q-cai
+export ODINSMART_ID_WYUR_ODIN=qsan3-xyaaa-aaaar-qbtsq-cai
+export NEWMO_ID_GSXY_ODIN=tlqmb-5qaaa-aaaar-qbt3a-cai
+export MAI_ID_LOHB_ODIN=6lizf-5aaaa-aaaar-qbsqa-cai
+export NEZHA_ID_UZWU_ODIN=qvblp-2aaaa-aaaar-qbtsa-cai
+export BTCD_ID_MTTS_ODIN=rkjyy-zyaaa-aaaar-qbtwq-cai
+export BTCS_ID_KFBA_ODIN=nhqct-pqaaa-aaaar-qbrxa-cai
+export SOON_ID_OREX_ODIN=rdkte-pqaaa-aaaar-qbtxa-cai
+export WETHO_ID_PWIG_ODIN=tqvqe-hiaaa-aaaar-qbtzq-cai
+export PIXIU_ID_CZCG_ODIN=tfsbj-gaaaa-aaaar-qbt2a-cai
+export BITFROLD_ID_WWHI_ODIN=txuwq-kqaaa-aaaar-qbtza-cai
 ```

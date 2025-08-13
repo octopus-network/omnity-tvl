@@ -28,7 +28,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
 
-	// 13 + 2 + 4 + 5 + 4 + 10 + 7 + 8 + 36 = 89
+	// 13 + 2 + 4 + 5 + 4 + 10 + 7 + 8 + 36 + 11 = 100
 	let runes = [
 		("ODINAPE_ID_BVAE_ODIN", "Bitcoin-runes-ODINAPE•ID•BVAE•ODIN", 8_i16),
 		("ODINDOG_ID_YTTL_ODIN", "Bitcoin-runes-ODINDOG•ID•YTTL•ODIN", 8_i16),
@@ -83,7 +83,6 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		("GOB_IS_GOB_IS_GOB", "Bitcoin-runes-GOB•IS•GOB•IS•GOB", 2_i16),
 		("NARRATIVE_ID_GKBG_ODIN", "Bitcoin-runes-NARRATIVE•ID•GKBG•ODIN", 8_i16),
 		("WETH_ID_BFPX_ODIN", "Bitcoin-runes-WETH•ID•BFPX•ODIN", 8_i16),
-		//36
 		("ODINFUN_ID_FDFU_ODIN", "Bitcoin-runes-ODINFUN•ID•FDFU•ODIN", 8_i16),
 		("WATTP_ID_GOIP_ODIN", "Bitcoin-runes-WATTP•ID•GOIP•ODIN", 8_i16),
 		("ZYRAS_ID_YQKN_ODIN", "Bitcoin-runes-ZYRAS•ID•YQKN•ODIN", 8_i16),
@@ -120,6 +119,18 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 		("ODINETX_ID_ACAY_ODIN", "Bitcoin-runes-ODINETX•ID•ACAY•ODIN", 8_i16),
 		("BITEAGLES_ID_CPLR_ODIN", "Bitcoin-runes-BITEAGLES•ID•CPLR•ODIN", 8_i16),
 		("SERGEASS_ID_WEZK_ODIN", "Bitcoin-runes-SERGEASS•ID•WEZK•ODIN", 8_i16),
+		//11
+		("KING_ID_MNJB_ODIN", "Bitcoin-runes-KING•ID•MNJB•ODIN", 8_i16),
+		("ODINSMART_ID_WYUR_ODIN", "Bitcoin-runes-ODINSMART•ID•WYUR•ODIN", 8_i16),
+		("NEWMO_ID_GSXY_ODIN", "Bitcoin-runes-NEWMO•ID•GSXY•ODIN", 8_i16),
+		("MAI_ID_LOHB_ODIN", "Bitcoin-runes-MAI•ID•LOHB•ODIN", 8_i16),
+		("NEZHA_ID_UZWU_ODIN", "Bitcoin-runes-NEZHA•ID•UZWU•ODIN", 8_i16),
+		("BTCD_ID_MTTS_ODIN", "Bitcoin-runes-BTCD•ID•MTTS•ODIN", 8_i16),
+		("BTCS_ID_KFBA_ODIN", "Bitcoin-runes-BTCS•ID•KFBA•ODIN", 8_i16),
+		("SOON_ID_OREX_ODIN", "Bitcoin-runes-SOON•ID•OREX•ODIN", 8_i16),
+		("WETHO_ID_PWIG_ODIN", "Bitcoin-runes-WETHO•ID•PWIG•ODIN", 8_i16),
+		("PIXIU_ID_CZCG_ODIN", "Bitcoin-runes-PIXIU•ID•CZCG•ODIN", 8_i16),
+		("BITFROLD_ID_WWHI_ODIN", "Bitcoin-runes-BITFROLD•ID•WWHI•ODIN", 8_i16),
 	];
 	for (id, name, decimals) in runes {
 		sync_rune(db, id, name, decimals).await?;
