@@ -301,24 +301,55 @@ pub async fn sync_with_bitlayer(ledger_id: &str) -> Result<String, Box<dyn Error
 	}
 }
 
+// deprecated
+// pub async fn sync_with_bsquared(ledger_id: &str) -> Result<String, Box<dyn Error>> {
+// 	let url = "https://explorer.bsquared.network/api?contractaddress=".to_string() + ledger_id + "&module=token&action=tokeninfo";
+// 	let client = reqwest::Client::new();
+// 	let response = client.get(url).send().await?;
+// 	let body = response.text().await?;
+// 	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
+// 		if let Some(layer_one) = value.as_object() {
+// 			if let Some(layer_two) = layer_one.get("result") {
+// 				if let Some(layer_three) = layer_two.as_array() {
+// 					if let Some(layer_four) = layer_three[0].as_object() {
+// 						if let Some(layer_five) = layer_four.get("totalSupply") {
+// 							let mut amount = layer_five.to_string();
+// 							amount.replace_range(0..1, "");
+// 							amount.replace_range((amount.len() - 1).., "");
+// 							return Ok(amount);
+// 						} else {
+// 							return Err("bsquared5 error".into());
+// 						}
+// 					} else {
+// 						return Err("bsquared4 error".into());
+// 					}
+// 				} else {
+// 					return Err("bsquared3 error".into());
+// 				}
+// 			} else {
+// 				return Err("bsquared2 error".into());
+// 			}
+// 		} else {
+// 			return Err("bsquared1 error".into());
+// 		}
+// 	} else {
+// 		return Err("bsquared0 error".into());
+// 	}
+// }
 pub async fn sync_with_bsquared(ledger_id: &str) -> Result<String, Box<dyn Error>> {
-	let url = "https://explorer.bsquared.network/api?contractaddress=".to_string() + ledger_id + "&module=token&action=tokeninfo";
+	let url = "https://12d6a1773a-backend-blockscout.bsquared.network/api/v2/addresses/".to_string() + ledger_id;
 	let client = reqwest::Client::new();
 	let response = client.get(url).send().await?;
 	let body = response.text().await?;
 	if let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) {
 		if let Some(layer_one) = value.as_object() {
-			if let Some(layer_two) = layer_one.get("result") {
-				if let Some(layer_three) = layer_two.as_array() {
-					if let Some(layer_four) = layer_three[0].as_object() {
-						if let Some(layer_five) = layer_four.get("totalSupply") {
-							let mut amount = layer_five.to_string();
-							amount.replace_range(0..1, "");
-							amount.replace_range((amount.len() - 1).., "");
-							return Ok(amount);
-						} else {
-							return Err("bsquared5 error".into());
-						}
+			if let Some(layer_two) = layer_one.get("token") {
+				if let Some(layer_three) = layer_two.as_object() {
+					if let Some(layer_four) = layer_three.get("total_supply") {
+						let mut amount = layer_four.to_string();
+						amount.replace_range(0..1, "");
+						amount.replace_range((amount.len() - 1).., "");
+						return Ok(amount);
 					} else {
 						return Err("bsquared4 error".into());
 					}
