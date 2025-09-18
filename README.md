@@ -87,10 +87,8 @@ export GDOG_ID_TCCK_ODIN=ihzwf-vyaaa-aaaar-qbopa-cai
 export GOB_IS_GOB_IS_GOB=re5bs-eiaaa-aaaar-qbmsa-cai
 export NARRATIVE_ID_GKBG_ODIN=k2eyn-gqaaa-aaaar-qboaq-cai
 export WETH_ID_BFPX_ODIN=myofg-kiaaa-aaaar-qbowa-cai
-
 export EICP_RUNES_X_BITCOIN=2tkm7-oiaaa-aaaar-qaija-cai
 export EICP_DOG_GO_TO_THE_MOON=fmazi-nqaaa-aaaar-qagmq-cai
-
 export ODINFUN_ID_FDFU_ODIN=notjp-zyaaa-aaaar-qbrwq-cai
 export WATTP_ID_GOIP_ODIN=nsxt6-oyaaa-aaaar-qbruq-cai
 export ZYRAS_ID_YQKN_ODIN=lx4ib-pyaaa-aaaar-qbrcq-cai
@@ -127,7 +125,6 @@ export HORSE_ID_ZBZS_ODIN=qjfr6-naaaa-aaaar-qbtqa-cai
 export ODINETX_ID_ACAY_ODIN=qkq4t-syaaa-aaaar-qaria-cai
 export BITEAGLES_ID_CPLR_ODIN=wxlwe-wyaaa-aaaar-qbteq-cai
 export SERGEASS_ID_WEZK_ODIN=6to4p-6aaaa-aaaar-qappa-cai
-
 export KING_ID_MNJB_ODIN=tmrkv-qiaaa-aaaar-qbt3q-cai
 export ODINSMART_ID_WYUR_ODIN=qsan3-xyaaa-aaaar-qbtsq-cai
 export NEWMO_ID_GSXY_ODIN=tlqmb-5qaaa-aaaar-qbt3a-cai
@@ -139,4 +136,15 @@ export SOON_ID_OREX_ODIN=rdkte-pqaaa-aaaar-qbtxa-cai
 export WETHO_ID_PWIG_ODIN=tqvqe-hiaaa-aaaar-qbtzq-cai
 export PIXIU_ID_CZCG_ODIN=tfsbj-gaaaa-aaaar-qbt2a-cai
 export BITFROLD_ID_WWHI_ODIN=txuwq-kqaaa-aaaar-qbtza-cai
+
+export CRYPTOBURG_ID_JQNJ_ODIN=4sdi3-3iaaa-aaaar-qbvca-cai
+export TERPLAYER_ID_WOUM_ODIN=4dsga-paaaa-aaaar-qbs4a-cai
+export KEKIUS_ID_EAQQ_ODIN=44bft-ayaaa-aaaar-qbvda-cai
+export RWAS_ID_LDMY_ODIN=zs4ip-haaaa-aaaar-qbv7q-cai
+export ODINSUN_ID_NJBX_ODIN=yrqbj-tyaaa-aaaar-qbvza-cai
+export EGG_ID_QNVR_ODIN=zoys6-qaaaa-aaaar-qbv5q-cai
+export ANI_ID_JEYD_ODIN=32gxk-vaaaa-aaaar-qbvtq-cai
+export OSK_ID_BBEE_ODIN=oprns-rqaaa-aaaar-qbwaq-cai
+export BTFR_ID_TYDK_ODIN=oiqlg-4iaaa-aaaar-qbwaa-cai
+export WETH_ID_EQXL_ODIN=2xite-2iaaa-aaaar-qbvua-cai
 ```
