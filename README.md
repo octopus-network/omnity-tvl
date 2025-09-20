@@ -136,7 +136,6 @@ export SOON_ID_OREX_ODIN=rdkte-pqaaa-aaaar-qbtxa-cai
 export WETHO_ID_PWIG_ODIN=tqvqe-hiaaa-aaaar-qbtzq-cai
 export PIXIU_ID_CZCG_ODIN=tfsbj-gaaaa-aaaar-qbt2a-cai
 export BITFROLD_ID_WWHI_ODIN=txuwq-kqaaa-aaaar-qbtza-cai
-
 export CRYPTOBURG_ID_JQNJ_ODIN=4sdi3-3iaaa-aaaar-qbvca-cai
 export TERPLAYER_ID_WOUM_ODIN=4dsga-paaaa-aaaar-qbs4a-cai
 export KEKIUS_ID_EAQQ_ODIN=44bft-ayaaa-aaaar-qbvda-cai
@@ -147,4 +146,16 @@ export ANI_ID_JEYD_ODIN=32gxk-vaaaa-aaaar-qbvtq-cai
 export OSK_ID_BBEE_ODIN=oprns-rqaaa-aaaar-qbwaq-cai
 export BTFR_ID_TYDK_ODIN=oiqlg-4iaaa-aaaar-qbwaa-cai
 export WETH_ID_EQXL_ODIN=2xite-2iaaa-aaaar-qbvua-cai
+
+export ODINLOOP_ID_FKJD_ODIN=y7smb-iiaaa-aaaar-qbvya-cai
+export BTCFI_ID_YUKN_ODIN=z46fh-4qaaa-aaaar-qbv6q-cai
+export ODINRATS_ID_MPLY_ODIN=kthtr-qyaaa-aaaar-qboba-cai
+export WATTP_ID_INHA_ODIN=zh3zc-giaaa-aaaar-qbv4a-cai
+export ASG_ID_XIOQ_ODIN=mhlsx-dqaaa-aaaar-qbwmq-cai
+export ODINPIZZA_ID_DNIO_ODIN=2foe5-wyaaa-aaaar-qbvxa-cai
+export SMARTBTC_ID_CHXX_ODIN=nkfwz-myaaa-aaaar-qbwla-cai
+export ITLG_ID_JMDX_ODIN=ykv5m-jaaaa-aaaar-qbv3q-cai
+export WCSC_ID_BYUG_ODIN=a3mng-yaaaa-aaaar-qbq6a-cai
+export BTL_ID_PSWX_ODIN=nwbmi-3yaaa-aaaar-qbwja-cai
+export WBTC_ID_JIUO_ODIN=ywrh5-6aaaa-aaaar-qbvzq-cai
 ```
