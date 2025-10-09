@@ -27,6 +27,7 @@ pub async fn sync_tokens_on_ledgers(db: &DbConn) -> Result<(), Box<dyn Error>> {
 	// sync_neuron_icp(&db).await?;
 	// sync_cketh(&db).await?;
 	// sync_ckusdt(&db).await?;
+	//61+11=72
 	let runes = [
 		("CRYPTOBURG_ID_JQNJ_ODIN", "Bitcoin-runes-CRYPTOBURG•ID•JQNJ•ODIN", 8_i16),
 		("BITCAT_ID_YRMO_ODIN", "Bitcoin-runes-BITCAT•ID•YRMO•ODIN", 8_i16),
